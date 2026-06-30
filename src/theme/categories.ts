@@ -37,3 +37,13 @@ export const EMPTY_GOALS = CATEGORY_KEYS.reduce(
   },
   {} as Record<CategoryKey, number>,
 );
+
+/** Distribuição padrão das metas (soma = 100%). */
+export const DEFAULT_GOALS: Record<CategoryKey, number> = {
+  custos_fixos: 30,
+  conforto: 15,
+  metas: 15,
+  prazeres: 10,
+  liberdade_financeira: 25,
+  conhecimento: 5,
+};

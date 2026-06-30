@@ -1,57 +1,39 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
+import { GoalSlider } from '@/components/GoalSlider';
 import { useBudget } from '@/data/BudgetProvider';
-import { CATEGORIES } from '@/theme/categories';
+import { CATEGORIES, DEFAULT_GOALS } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Goals } from '@/types/budget';
 
-type Draft = Record<CategoryKey, string>;
-
-function goalsToDraft(goals: Goals): Draft {
-  return CATEGORIES.reduce((acc, c) => {
-    acc[c.key] = String(goals[c.key] ?? 0);
-    return acc;
-  }, {} as Draft);
-}
-
-function parseNum(text: string): number {
-  const n = Number(text.replace(',', '.'));
-  return Number.isFinite(n) ? n : 0;
-}
-
 export default function GoalsScreen() {
   const { goals, saveGoals } = useBudget();
-  const [draft, setDraft] = useState<Draft>(() => goalsToDraft(goals));
+  const [draft, setDraft] = useState<Goals>(() => ({ ...goals }));
 
   useEffect(() => {
-    setDraft(goalsToDraft(goals));
+    setDraft({ ...goals });
   }, [goals]);
 
   const total = useMemo(
-    () => CATEGORIES.reduce((acc, c) => acc + parseNum(draft[c.key]), 0),
+    () => CATEGORIES.reduce((acc, c) => acc + (draft[c.key] ?? 0), 0),
     [draft],
   );
+  const valid = total === 100;
 
-  const valid = Math.abs(total - 100) < 0.001;
+  function setOne(key: CategoryKey, value: number) {
+    setDraft((d) => ({ ...d, [key]: value }));
+  }
+
+  function handleReset() {
+    setDraft({ ...DEFAULT_GOALS });
+  }
 
   async function handleSave() {
     if (!valid) return;
-    const next = CATEGORIES.reduce((acc, c) => {
-      acc[c.key] = parseNum(draft[c.key]);
-      return acc;
-    }, {} as Goals);
-    await saveGoals(next);
+    await saveGoals(draft);
     Alert.alert('Pronto', 'Metas salvas com sucesso.');
   }
 
@@ -60,50 +42,46 @@ export default function GoalsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>Metas de orçamento</Text>
         <Text style={styles.subheading}>
-          Defina o percentual da renda para cada categoria. A soma deve ser 100%.
+          Arraste para definir o percentual da renda de cada categoria. A soma deve ser 100%.
         </Text>
 
         <Card>
           {CATEGORIES.map((c) => (
-            <View key={c.key} style={styles.row}>
-              <View style={[styles.dot, { backgroundColor: c.color }]} />
-              <Text style={styles.label}>{c.label}</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={draft[c.key]}
-                onChangeText={(text) => setDraft((d) => ({ ...d, [c.key]: text }))}
-                placeholder="0"
-                placeholderTextColor={Colors.textMuted}
-              />
-              <Text style={styles.percent}>%</Text>
-            </View>
+            <GoalSlider
+              key={c.key}
+              label={c.label}
+              color={c.color}
+              value={draft[c.key] ?? 0}
+              onChange={(v) => setOne(c.key, v)}
+            />
           ))}
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text
-              style={[
-                styles.totalValue,
-                { color: valid ? Colors.positive : Colors.negative },
-              ]}>
-              {total.toFixed(total % 1 === 0 ? 0 : 2)}%
+              style={[styles.totalValue, { color: valid ? Colors.positive : Colors.negative }]}>
+              {total}%
             </Text>
           </View>
         </Card>
 
         {!valid ? (
           <Text style={styles.warning}>
-            A soma precisa ser exatamente 100% para salvar (atual: {total.toFixed(2)}%).
+            A soma precisa ser exatamente 100% para salvar (atual: {total}%).
           </Text>
         ) : null}
 
-        <TouchableOpacity
-          style={[styles.saveButton, !valid && styles.disabled]}
-          onPress={handleSave}
-          disabled={!valid}>
-          <Text style={styles.saveText}>Salvar metas</Text>
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity style={[styles.button, styles.reset]} onPress={handleReset}>
+            <Text style={styles.resetText}>Resetar valores</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.save, !valid && styles.disabled]}
+            onPress={handleSave}
+            disabled={!valid}>
+            <Text style={styles.saveText}>Salvar metas</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,44 +107,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: -Spacing.sm,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  label: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: 15,
-  },
-  input: {
-    width: 64,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    color: Colors.text,
-    fontSize: 16,
-    textAlign: 'right',
-  },
-  percent: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    width: 16,
-  },
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border,
   },
   totalLabel: {
     color: Colors.text,
@@ -181,11 +128,28 @@ const styles = StyleSheet.create({
     color: Colors.negative,
     fontSize: 13,
   },
-  saveButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.md,
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  button: {
+    flex: 1,
     paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
     alignItems: 'center',
+  },
+  reset: {
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  resetText: {
+    color: Colors.text,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  save: {
+    backgroundColor: Colors.accent,
   },
   saveText: {
     color: '#000',

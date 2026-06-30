@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import { currentMonthKey } from '@/lib/month';
-import { EMPTY_GOALS } from '@/theme/categories';
+import { DEFAULT_GOALS } from '@/theme/categories';
 import type {
   Expense,
   Goals,
@@ -43,7 +43,7 @@ const BudgetContext = createContext<BudgetContextValue | null>(null);
 
 export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [month, setMonth] = useState<MonthKey>(currentMonthKey());
-  const [goals, setGoals] = useState<Goals>({ ...EMPTY_GOALS });
+  const [goals, setGoals] = useState<Goals>({ ...DEFAULT_GOALS });
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);

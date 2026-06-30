@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { EMPTY_GOALS } from '@/theme/categories';
+import { DEFAULT_GOALS } from '@/theme/categories';
 import type {
   Expense,
   Goals,
@@ -40,7 +40,7 @@ function byNewestFirst<T extends { createdAt: string }>(list: T[]): T[] {
 /** Implementação local (no aparelho) — sobrevive ao recarregar o app. */
 export class LocalRepository implements BudgetRepository {
   async getGoals(): Promise<Goals> {
-    return readJson<Goals>(K_GOALS, { ...EMPTY_GOALS });
+    return readJson<Goals>(K_GOALS, { ...DEFAULT_GOALS });
   }
 
   async saveGoals(goals: Goals): Promise<void> {
