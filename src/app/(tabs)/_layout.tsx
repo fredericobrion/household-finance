@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+import { BudgetProvider } from '@/data/BudgetProvider';
 import { Colors } from '@/theme/colors';
 
 export default function TabsLayout() {
   return (
-    <Tabs
+    <BudgetProvider>
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.accent,
@@ -33,6 +35,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-    </Tabs>
+      </Tabs>
+    </BudgetProvider>
   );
 }

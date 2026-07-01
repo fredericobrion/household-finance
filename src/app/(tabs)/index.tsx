@@ -71,24 +71,38 @@ export default function BudgetScreen() {
   }
 
   async function submitExpense(values: ExpenseFormValues) {
-    if (editing) {
-      await updateExpense(editing.id, values);
-    } else {
-      await addExpense({ ...values, month });
+    try {
+      if (editing) {
+        await updateExpense(editing.id, values);
+      } else {
+        await addExpense({ ...values, month });
+      }
+      setExpenseModal(false);
+      setEditing(null);
+    } catch {
+      // erro já exibido pelo provider; mantém o modal aberto
     }
-    setExpenseModal(false);
-    setEditing(null);
   }
 
   async function submitIncome(values: IncomeFormValues) {
-    await addIncome({ ...values, month });
-    setIncomeModal(false);
+    try {
+      await addIncome({ ...values, month });
+      setIncomeModal(false);
+    } catch {
+      // erro já exibido pelo provider; mantém o modal aberto
+    }
   }
 
   function confirmDeleteExpense(expense: Expense) {
     Alert.alert('Excluir gasto', `Remover "${expense.description || 'gasto'}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Excluir', style: 'destructive', onPress: () => deleteExpense(expense.id) },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => {
+          deleteExpense(expense.id).catch(() => {});
+        },
+      },
     ]);
   }
 
@@ -110,7 +124,11 @@ export default function BudgetScreen() {
                     {inc.description || 'Renda'}
                   </Text>
                   <Text style={styles.lineAmount}>{formatCurrency(inc.amount)}</Text>
-                  <TouchableOpacity onPress={() => deleteIncome(inc.id)} hitSlop={8}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      deleteIncome(inc.id).catch(() => {});
+                    }}
+                    hitSlop={8}>
                     <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
                   </TouchableOpacity>
                 </View>

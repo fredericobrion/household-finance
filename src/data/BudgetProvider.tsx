@@ -6,6 +6,12 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { Alert } from 'react-native';
+
+function alertError(e: unknown) {
+  const message = e instanceof Error ? e.message : 'Falha ao acessar os dados.';
+  Alert.alert('Erro', message);
+}
 
 import { currentMonthKey } from '@/lib/month';
 import { DEFAULT_GOALS } from '@/theme/categories';
@@ -17,12 +23,13 @@ import type {
   NewExpense,
   NewIncome,
 } from '@/types/budget';
-import { LocalRepository } from './localRepository';
 import type { BudgetRepository } from './repository';
+import { SupabaseRepository } from './supabaseRepository';
 
-// 🔁 Ponto único de troca quando formos pro Supabase:
-//    const repository = new SupabaseRepository();
-const repository: BudgetRepository = new LocalRepository();
+// 🔁 Ponto único de troca da fonte de dados.
+//    Local (offline):  const repository = new LocalRepository();
+//    Supabase (nuvem): const repository = new SupabaseRepository();
+const repository: BudgetRepository = new SupabaseRepository();
 
 interface BudgetContextValue {
   month: MonthKey;
@@ -61,11 +68,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     (async () => {
       setLoading(true);
-      const g = await repository.getGoals();
-      if (!active) return;
-      setGoals(g);
-      await refreshMonth(month);
-      if (active) setLoading(false);
+      try {
+        const g = await repository.getGoals();
+        if (!active) return;
+        setGoals(g);
+        await refreshMonth(month);
+      } catch (e) {
+        if (active) alertError(e);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
     return () => {
       active = false;
@@ -73,46 +85,76 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   }, [month, refreshMonth]);
 
   const saveGoals = useCallback(async (g: Goals) => {
-    await repository.saveGoals(g);
-    setGoals(g);
+    try {
+      await repository.saveGoals(g);
+      setGoals(g);
+    } catch (e) {
+      alertError(e);
+      throw e;
+    }
   }, []);
 
   const addExpense = useCallback(
     async (input: NewExpense) => {
-      await repository.addExpense(input);
-      await refreshMonth(month);
+      try {
+        await repository.addExpense(input);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
     },
     [month, refreshMonth],
   );
 
   const updateExpense = useCallback(
     async (id: string, patch: Partial<NewExpense>) => {
-      await repository.updateExpense(id, patch);
-      await refreshMonth(month);
+      try {
+        await repository.updateExpense(id, patch);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
     },
     [month, refreshMonth],
   );
 
   const deleteExpense = useCallback(
     async (id: string) => {
-      await repository.deleteExpense(id);
-      await refreshMonth(month);
+      try {
+        await repository.deleteExpense(id);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
     },
     [month, refreshMonth],
   );
 
   const addIncome = useCallback(
     async (input: NewIncome) => {
-      await repository.addIncome(input);
-      await refreshMonth(month);
+      try {
+        await repository.addIncome(input);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
     },
     [month, refreshMonth],
   );
 
   const deleteIncome = useCallback(
     async (id: string) => {
-      await repository.deleteIncome(id);
-      await refreshMonth(month);
+      try {
+        await repository.deleteIncome(id);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
     },
     [month, refreshMonth],
   );

@@ -28,6 +28,19 @@ create table profiles (
   created_at   timestamptz not null default now()
 );
 
+-- ---------- Helper: household do usuário logado ----------
+-- security definer p/ ler profiles sem recursão de RLS.
+-- Usado nas policies E como default de household_id nos inserts.
+create or replace function auth_household_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select household_id from profiles where id = auth.uid()
+$$;
+
 -- ---------- Goals (metas globais por household) ----------
 create table goals (
   household_id uuid not null references households (id) on delete cascade,
@@ -39,7 +52,7 @@ create table goals (
 -- ---------- Incomes (rendas do mês — vários lançamentos) ----------
 create table incomes (
   id              uuid primary key default gen_random_uuid(),
-  household_id    uuid not null references households (id) on delete cascade,
+  household_id    uuid not null default auth_household_id() references households (id) on delete cascade,
   reference_month date not null,                 -- 1º dia do mês
   description     text,
   amount          numeric(12,2) not null check (amount >= 0),
@@ -49,7 +62,7 @@ create table incomes (
 -- ---------- Expenses (gastos individuais) ----------
 create table expenses (
   id              uuid primary key default gen_random_uuid(),
-  household_id    uuid not null references households (id) on delete cascade,
+  household_id    uuid not null default auth_household_id() references households (id) on delete cascade,
   reference_month date not null,                 -- 1º dia do mês
   category        budget_category not null,
   description     text,
@@ -61,21 +74,8 @@ create index incomes_household_month_idx  on incomes  (household_id, reference_m
 create index expenses_household_month_idx on expenses (household_id, reference_month);
 
 -- =============================================================
--- Helper: household do usuário logado (usado nas policies)
--- security definer p/ ler profiles sem recursão de RLS
--- =============================================================
-create or replace function auth_household_id()
-returns uuid
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select household_id from profiles where id = auth.uid()
-$$;
-
--- =============================================================
--- Gatilho: ao criar usuário, cria profile (e household + metas no 1º)
+-- Gatilho: ao criar usuário, cria profile
+-- (e household + metas padrão no primeiro cadastro)
 -- =============================================================
 create or replace function handle_new_user()
 returns trigger
@@ -91,9 +91,14 @@ begin
 
   if hh is null then
     insert into households (name) values ('Casa') returning id into hh;
-    -- semeia as 6 metas em 0% (você ajusta depois na tela de Configurações)
-    insert into goals (household_id, category)
-    select hh, c from unnest(enum_range(null::budget_category)) as c;
+    -- semeia as metas com a distribuição padrão (soma = 100%)
+    insert into goals (household_id, category, percentage) values
+      (hh, 'custos_fixos', 30),
+      (hh, 'conforto', 15),
+      (hh, 'metas', 15),
+      (hh, 'prazeres', 10),
+      (hh, 'liberdade_financeira', 25),
+      (hh, 'conhecimento', 5);
   end if;
 
   insert into profiles (id, household_id, display_name)

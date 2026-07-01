@@ -33,8 +33,12 @@ export default function GoalsScreen() {
 
   async function handleSave() {
     if (!valid) return;
-    await saveGoals(draft);
-    Alert.alert('Pronto', 'Metas salvas com sucesso.');
+    try {
+      await saveGoals(draft);
+      Alert.alert('Pronto', 'Metas salvas com sucesso.');
+    } catch {
+      // erro já exibido pelo provider
+    }
   }
 
   return (
