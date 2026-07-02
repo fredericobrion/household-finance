@@ -1,8 +1,17 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { BudgetSummary } from '@/lib/budget';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { Colors, Spacing } from '@/theme/colors';
+
+const COL = {
+  name: 150,
+  spent: 120,
+  should: 120,
+  used: 80,
+  total: 80,
+};
+const TABLE_WIDTH = COL.name + COL.spent + COL.should + COL.used + COL.total;
 
 function usedColor(usedPct: number, hasGoal: boolean): string {
   if (!hasGoal) return Colors.textSecondary;
@@ -14,33 +23,45 @@ export function SummaryTable({ summary }: { summary: BudgetSummary }) {
 
   return (
     <View>
-      <View style={styles.headerRow}>
-        <Text style={[styles.th, styles.colName]}>Budget</Text>
-        <Text style={[styles.th, styles.colNum]}>Gasto</Text>
-        <Text style={[styles.th, styles.colNum]}>Devo gastar</Text>
-        <Text style={[styles.th, styles.colSmall]}>Usado</Text>
-        <Text style={[styles.th, styles.colSmall]}>Total</Text>
-      </View>
-
-      {rows.map((r) => (
-        <View key={r.key} style={styles.row}>
-          <View style={[styles.colName, styles.nameCell]}>
-            <View style={[styles.dot, { backgroundColor: r.color }]} />
-            <Text style={styles.nameText} numberOfLines={1}>
-              {r.label}
-            </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={{ width: TABLE_WIDTH }}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.th, { width: COL.name }]}>Budget</Text>
+            <Text style={[styles.th, styles.right, { width: COL.spent }]}>Valor Gasto</Text>
+            <Text style={[styles.th, styles.right, { width: COL.should }]}>Devo gastar</Text>
+            <Text style={[styles.th, styles.right, { width: COL.used }]}>Utilizado</Text>
+            <Text style={[styles.th, styles.right, { width: COL.total }]}>Total</Text>
           </View>
-          <Text style={[styles.td, styles.colNum]}>{formatCurrency(r.spent)}</Text>
-          <Text style={[styles.td, styles.colNum]}>{formatCurrency(r.shouldSpend)}</Text>
-          <Text
-            style={[styles.td, styles.colSmall, { color: usedColor(r.usedPct, r.goalPct > 0) }]}>
-            {formatPercent(r.usedPct, 1)}
-          </Text>
-          <Text style={[styles.td, styles.colSmall, styles.muted]}>
-            {formatPercent(r.totalPct, 1)}
-          </Text>
+
+          {rows.map((r) => (
+            <View key={r.key} style={styles.row}>
+              <View style={[styles.nameCell, { width: COL.name }]}>
+                <View style={[styles.dot, { backgroundColor: r.color }]} />
+                <Text style={styles.nameText} numberOfLines={1}>
+                  {r.label}
+                </Text>
+              </View>
+              <Text style={[styles.td, styles.right, { width: COL.spent }]}>
+                {formatCurrency(r.spent)}
+              </Text>
+              <Text style={[styles.td, styles.right, { width: COL.should }]}>
+                {formatCurrency(r.shouldSpend)}
+              </Text>
+              <Text
+                style={[
+                  styles.td,
+                  styles.right,
+                  { width: COL.used, color: usedColor(r.usedPct, r.goalPct > 0) },
+                ]}>
+                {formatPercent(r.usedPct, 1)}
+              </Text>
+              <Text style={[styles.td, styles.right, styles.muted, { width: COL.total }]}>
+                {formatPercent(r.totalPct, 1)}
+              </Text>
+            </View>
+          ))}
         </View>
-      ))}
+      </ScrollView>
 
       <View style={styles.footer}>
         <View style={styles.footerItem}>
@@ -83,26 +104,18 @@ const styles = StyleSheet.create({
   },
   th: {
     color: Colors.textSecondary,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   td: {
     color: Colors.text,
-    fontSize: 11.5,
+    fontSize: 13,
+  },
+  right: {
+    textAlign: 'right',
   },
   muted: {
     color: Colors.textSecondary,
-  },
-  colName: {
-    flex: 1.5,
-  },
-  colNum: {
-    flex: 1.15,
-    textAlign: 'right',
-  },
-  colSmall: {
-    flex: 0.85,
-    textAlign: 'right',
   },
   nameCell: {
     flexDirection: 'row',
@@ -116,7 +129,7 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: Colors.text,
-    fontSize: 12,
+    fontSize: 13,
     flexShrink: 1,
   },
   footer: {

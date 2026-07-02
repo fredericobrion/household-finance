@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { parseAmount } from '@/lib/format';
+import { amountToCents, centsToAmount, formatCurrency, onlyDigits } from '@/lib/format';
 import { CATEGORIES } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Expense } from '@/types/budget';
@@ -43,12 +43,12 @@ export function ExpenseFormModal({
   useEffect(() => {
     if (visible) {
       setDescription(initial?.description ?? '');
-      setAmountText(initial ? String(initial.amount).replace('.', ',') : '');
+      setAmountText(initial ? amountToCents(initial.amount) : '');
       setCategory(initial?.category ?? null);
     }
   }, [visible, initial]);
 
-  const amount = parseAmount(amountText);
+  const amount = centsToAmount(amountText);
   const canSave = amount > 0 && category !== null;
 
   function handleSave() {
@@ -78,14 +78,14 @@ export function ExpenseFormModal({
               onChangeText={setDescription}
             />
 
-            <Text style={styles.label}>Valor (R$)</Text>
+            <Text style={styles.label}>Valor</Text>
             <TextInput
               style={styles.input}
-              placeholder="0,00"
+              placeholder="R$ 0,00"
               placeholderTextColor={Colors.textMuted}
               keyboardType="numeric"
-              value={amountText}
-              onChangeText={setAmountText}
+              value={amountText ? formatCurrency(amount) : ''}
+              onChangeText={(text) => setAmountText(onlyDigits(text))}
             />
 
             <Text style={styles.label}>Categoria</Text>

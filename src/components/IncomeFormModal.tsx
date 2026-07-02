@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { parseAmount } from '@/lib/format';
+import { centsToAmount, formatCurrency, onlyDigits } from '@/lib/format';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 
 export interface IncomeFormValues {
@@ -36,7 +36,7 @@ export function IncomeFormModal({ visible, onClose, onSubmit }: IncomeFormModalP
     }
   }, [visible]);
 
-  const amount = parseAmount(amountText);
+  const amount = centsToAmount(amountText);
   const canSave = amount > 0;
 
   function handleSave() {
@@ -65,14 +65,14 @@ export function IncomeFormModal({ visible, onClose, onSubmit }: IncomeFormModalP
             onChangeText={setDescription}
           />
 
-          <Text style={styles.label}>Valor (R$)</Text>
+          <Text style={styles.label}>Valor</Text>
           <TextInput
             style={styles.input}
-            placeholder="0,00"
+            placeholder="R$ 0,00"
             placeholderTextColor={Colors.textMuted}
             keyboardType="numeric"
-            value={amountText}
-            onChangeText={setAmountText}
+            value={amountText ? formatCurrency(amount) : ''}
+            onChangeText={(text) => setAmountText(onlyDigits(text))}
           />
 
           <View style={styles.actions}>

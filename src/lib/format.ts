@@ -13,14 +13,18 @@ export function formatPercent(value: number, decimals = 2): string {
   return `${value.toFixed(decimals)}%`;
 }
 
-/** Converte texto digitado ("1.655,50" ou "1655.50") em número. */
-export function parseAmount(input: string): number {
-  if (!input) return 0;
-  const normalized = input
-    .replace(/\s/g, '')
-    .replace(/R\$/gi, '')
-    .replace(/\./g, '')
-    .replace(',', '.');
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : 0;
+/** Mantém só dígitos (para o input em centavos). */
+export function onlyDigits(input: string): string {
+  return input.replace(/\D/g, '');
+}
+
+/** Dígitos como centavos -> valor. Ex.: "2500" -> 25.00, "5" -> 0.05. */
+export function centsToAmount(digits: string): number {
+  return digits ? Number(digits) / 100 : 0;
+}
+
+/** Valor -> string de centavos (para pré-preencher ao editar). Ex.: 25 -> "2500". */
+export function amountToCents(amount: number): string {
+  if (!amount) return '';
+  return String(Math.round(amount * 100));
 }

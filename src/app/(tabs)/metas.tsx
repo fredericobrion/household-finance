@@ -1,40 +1,65 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
-import { GoalSlider } from '@/components/GoalSlider';
 import { useBudget } from '@/data/BudgetProvider';
 import { CATEGORIES, DEFAULT_GOALS } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Goals } from '@/types/budget';
 
+type Draft = Record<CategoryKey, string>;
+
+function goalsToDraft(goals: Goals): Draft {
+  return CATEGORIES.reduce((acc, c) => {
+    acc[c.key] = String(goals[c.key] ?? 0);
+    return acc;
+  }, {} as Draft);
+}
+
+function parseNum(text: string): number {
+  const n = Number(text.replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function GoalsScreen() {
   const { goals, saveGoals } = useBudget();
-  const [draft, setDraft] = useState<Goals>(() => ({ ...goals }));
+  const [draft, setDraft] = useState<Draft>(() => goalsToDraft(goals));
 
   useEffect(() => {
-    setDraft({ ...goals });
+    setDraft(goalsToDraft(goals));
   }, [goals]);
 
   const total = useMemo(
-    () => CATEGORIES.reduce((acc, c) => acc + (draft[c.key] ?? 0), 0),
+    () => CATEGORIES.reduce((acc, c) => acc + parseNum(draft[c.key]), 0),
     [draft],
   );
-  const valid = total === 100;
+  const valid = Math.abs(total - 100) < 0.001;
 
-  function setOne(key: CategoryKey, value: number) {
-    setDraft((d) => ({ ...d, [key]: value }));
+  function setOne(key: CategoryKey, text: string) {
+    setDraft((d) => ({ ...d, [key]: text.replace(/[^0-9.,]/g, '') }));
   }
 
   function handleReset() {
-    setDraft({ ...DEFAULT_GOALS });
+    setDraft(goalsToDraft(DEFAULT_GOALS));
   }
 
   async function handleSave() {
     if (!valid) return;
+    const next = CATEGORIES.reduce((acc, c) => {
+      acc[c.key] = parseNum(draft[c.key]);
+      return acc;
+    }, {} as Goals);
     try {
-      await saveGoals(draft);
+      await saveGoals(next);
       Alert.alert('Pronto', 'Metas salvas com sucesso.');
     } catch {
       // erro já exibido pelo provider
@@ -43,35 +68,44 @@ export default function GoalsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.heading}>Metas de orçamento</Text>
         <Text style={styles.subheading}>
-          Arraste para definir o percentual da renda de cada categoria. A soma deve ser 100%.
+          Digite o percentual da renda de cada categoria. A soma deve ser 100%.
         </Text>
 
         <Card>
           {CATEGORIES.map((c) => (
-            <GoalSlider
-              key={c.key}
-              label={c.label}
-              color={c.color}
-              value={draft[c.key] ?? 0}
-              onChange={(v) => setOne(c.key, v)}
-            />
+            <View key={c.key} style={styles.row}>
+              <View style={[styles.dot, { backgroundColor: c.color }]} />
+              <Text style={styles.label}>{c.label}</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={draft[c.key]}
+                onChangeText={(text) => setOne(c.key, text)}
+                placeholder="0"
+                placeholderTextColor={Colors.textMuted}
+                selectTextOnFocus
+                maxLength={5}
+              />
+              <Text style={styles.percent}>%</Text>
+            </View>
           ))}
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text
               style={[styles.totalValue, { color: valid ? Colors.positive : Colors.negative }]}>
-              {total}%
+              {total % 1 === 0 ? total : total.toFixed(2)}%
             </Text>
           </View>
         </Card>
 
         {!valid ? (
           <Text style={styles.warning}>
-            A soma precisa ser exatamente 100% para salvar (atual: {total}%).
+            A soma precisa ser exatamente 100% para salvar (atual:{' '}
+            {total % 1 === 0 ? total : total.toFixed(2)}%).
           </Text>
         ) : null}
 
@@ -111,13 +145,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: -Spacing.sm,
   },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  label: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 15,
+  },
+  input: {
+    width: 64,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    color: Colors.text,
+    fontSize: 16,
+    textAlign: 'right',
+  },
+  percent: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    width: 16,
+  },
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    paddingTop: Spacing.lg,
   },
   totalLabel: {
     color: Colors.text,
