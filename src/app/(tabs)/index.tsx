@@ -107,7 +107,7 @@ export default function BudgetScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={[]}>
       <ScrollView contentContainerStyle={styles.content}>
         <MonthSelector month={month} onChange={setMonth} />
 

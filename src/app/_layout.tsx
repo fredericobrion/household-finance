@@ -1,4 +1,5 @@
-import { Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -33,12 +34,37 @@ function Gate() {
   }
 
   return (
-    <Stack
+    <Drawer
       screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: Colors.background },
-      }}
-    />
+        headerStyle: { backgroundColor: Colors.surface },
+        headerTintColor: Colors.text,
+        headerTitleStyle: { fontWeight: '700' },
+        drawerStyle: { backgroundColor: Colors.surface },
+        drawerActiveTintColor: Colors.accent,
+        drawerInactiveTintColor: Colors.textSecondary,
+        drawerActiveBackgroundColor: Colors.surfaceAlt,
+      }}>
+      <Drawer.Screen
+        name="(tabs)"
+        options={{
+          title: 'Orçamento',
+          drawerLabel: 'Orçamento',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="wallet-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="besteira"
+        options={{
+          title: 'Gastos Pessoais',
+          drawerLabel: 'Gastos Pessoais',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="happy-outline" color={color} size={size} />
+          ),
+        }}
+      />
+    </Drawer>
   );
 }
 
