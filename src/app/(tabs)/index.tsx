@@ -20,7 +20,7 @@ import { MonthSelector } from '@/components/MonthSelector';
 import { SummaryTable } from '@/components/SummaryTable';
 import { useBudget } from '@/data/BudgetProvider';
 import { computeSummary } from '@/lib/budget';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDateShort } from '@/lib/format';
 import { CATEGORIES, categoryMeta } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Expense } from '@/types/budget';
@@ -33,6 +33,7 @@ export default function BudgetScreen() {
     goals,
     incomes,
     expenses,
+    expenseNames,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -59,6 +60,36 @@ export default function BudgetScreen() {
     () => (filter === 'all' ? expenses : expenses.filter((e) => e.category === filter)),
     [expenses, filter],
   );
+
+  // agrupa gastos de mesmo nome no mês (descrição vazia nunca agrupa)
+  const groups = useMemo(() => {
+    const map = new Map<string, Expense[]>();
+    const order: string[] = [];
+    for (const e of filteredExpenses) {
+      const name = e.description.trim();
+      const key = name ? `n:${name.toLowerCase()}` : `id:${e.id}`;
+      if (!map.has(key)) {
+        map.set(key, []);
+        order.push(key);
+      }
+      map.get(key)!.push(e);
+    }
+    return order.map((key) => {
+      const entries = map.get(key)!;
+      return {
+        key,
+        name: entries[0].description || categoryMeta(entries[0].category).label,
+        entries,
+        total: entries.reduce((acc, e) => acc + e.amount, 0),
+        grouped: entries.length > 1,
+      };
+    });
+  }, [filteredExpenses]);
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  function toggleGroup(key: string) {
+    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
 
   function openNewExpense() {
     setEditing(null);
@@ -104,6 +135,33 @@ export default function BudgetScreen() {
         },
       },
     ]);
+  }
+
+  function renderExpenseRow(exp: Expense, showName: boolean, indent = false) {
+    const meta = categoryMeta(exp.category);
+    return (
+      <TouchableOpacity
+        key={exp.id}
+        style={[styles.expenseRow, indent && styles.indentRow]}
+        activeOpacity={0.7}
+        onPress={() => openEditExpense(exp)}>
+        <View style={[styles.dot, { backgroundColor: meta.color }]} />
+        <View style={styles.expenseInfo}>
+          {showName ? (
+            <Text style={styles.expenseDesc} numberOfLines={1}>
+              {exp.description || meta.label}
+            </Text>
+          ) : null}
+          <Text style={styles.expenseCat}>
+            {meta.label} · {formatDateShort(exp.createdAt)}
+          </Text>
+        </View>
+        <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
+        <TouchableOpacity onPress={() => confirmDeleteExpense(exp)} hitSlop={8}>
+          <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
   }
 
   return (
@@ -165,31 +223,37 @@ export default function BudgetScreen() {
             {/* Lista de gastos */}
             <Card title="Gastos lançados">
               <CategoryFilter selected={filter} onSelect={setFilter} />
-              {filteredExpenses.length === 0 ? (
+              {groups.length === 0 ? (
                 <Text style={styles.empty}>Nenhum gasto neste filtro.</Text>
               ) : (
-                filteredExpenses.map((exp) => {
-                  const meta = categoryMeta(exp.category);
-                  return (
-                    <TouchableOpacity
-                      key={exp.id}
-                      style={styles.expenseRow}
-                      activeOpacity={0.7}
-                      onPress={() => openEditExpense(exp)}>
-                      <View style={[styles.dot, { backgroundColor: meta.color }]} />
-                      <View style={styles.expenseInfo}>
-                        <Text style={styles.expenseDesc} numberOfLines={1}>
-                          {exp.description || meta.label}
+                groups.map((g) =>
+                  g.grouped ? (
+                    <View key={g.key}>
+                      <TouchableOpacity
+                        style={styles.groupRow}
+                        activeOpacity={0.7}
+                        onPress={() => toggleGroup(g.key)}>
+                        <Ionicons
+                          name={expanded[g.key] ? 'chevron-down' : 'chevron-forward'}
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                        <Text style={styles.groupName} numberOfLines={1}>
+                          {g.name}
                         </Text>
-                        <Text style={styles.expenseCat}>{meta.label}</Text>
-                      </View>
-                      <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
-                      <TouchableOpacity onPress={() => confirmDeleteExpense(exp)} hitSlop={8}>
-                        <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
+                        <View style={styles.countBadge}>
+                          <Text style={styles.countText}>{g.entries.length}x</Text>
+                        </View>
+                        <Text style={styles.expenseAmount}>{formatCurrency(g.total)}</Text>
                       </TouchableOpacity>
-                    </TouchableOpacity>
-                  );
-                })
+                      {expanded[g.key]
+                        ? g.entries.map((exp) => renderExpenseRow(exp, false, true))
+                        : null}
+                    </View>
+                  ) : (
+                    renderExpenseRow(g.entries[0], true, false)
+                  ),
+                )
               )}
               <TouchableOpacity style={styles.addButton} onPress={openNewExpense}>
                 <Ionicons name="add" size={20} color="#000" />
@@ -203,6 +267,7 @@ export default function BudgetScreen() {
       <ExpenseFormModal
         visible={expenseModal}
         initial={editing}
+        suggestions={expenseNames}
         onClose={() => {
           setExpenseModal(false);
           setEditing(null);
@@ -298,6 +363,35 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
+  },
+  indentRow: {
+    paddingLeft: Spacing.lg,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  groupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  groupName: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  countBadge: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+  },
+  countText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
   },
   expenseInfo: {
     flex: 1,

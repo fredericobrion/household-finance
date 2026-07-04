@@ -11,7 +11,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { amountToCents, centsToAmount, formatCurrency, onlyDigits } from '@/lib/format';
+import {
+  amountToCents,
+  centsToAmount,
+  formatCurrency,
+  normalizeText,
+  onlyDigits,
+} from '@/lib/format';
 import { CATEGORIES } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Expense } from '@/types/budget';
@@ -25,6 +31,7 @@ export interface ExpenseFormValues {
 interface ExpenseFormModalProps {
   visible: boolean;
   initial?: Expense | null;
+  suggestions?: string[];
   onClose: () => void;
   onSubmit: (values: ExpenseFormValues) => void;
 }
@@ -32,6 +39,7 @@ interface ExpenseFormModalProps {
 export function ExpenseFormModal({
   visible,
   initial,
+  suggestions = [],
   onClose,
   onSubmit,
 }: ExpenseFormModalProps) {
@@ -50,6 +58,17 @@ export function ExpenseFormModal({
 
   const amount = centsToAmount(amountText);
   const canSave = amount > 0 && category !== null;
+
+  const query = normalizeText(description);
+  const matches =
+    query.length === 0
+      ? []
+      : suggestions
+          .filter((n) => {
+            const nn = normalizeText(n);
+            return nn.startsWith(query) && nn !== query;
+          })
+          .slice(0, 6);
 
   function handleSave() {
     if (!canSave || category === null) return;
@@ -77,6 +96,19 @@ export function ExpenseFormModal({
               value={description}
               onChangeText={setDescription}
             />
+            {matches.length > 0 ? (
+              <View style={styles.suggestions}>
+                {matches.map((name) => (
+                  <TouchableOpacity
+                    key={name}
+                    style={styles.suggestionChip}
+                    onPress={() => setDescription(name)}
+                    activeOpacity={0.7}>
+                    <Text style={styles.suggestionText}>{name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : null}
 
             <Text style={styles.label}>Valor</Text>
             <TextInput
@@ -166,6 +198,24 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     color: Colors.text,
     fontSize: 16,
+  },
+  suggestions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  suggestionChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  suggestionText: {
+    color: Colors.text,
+    fontSize: 13,
   },
   categoryGrid: {
     flexDirection: 'row',

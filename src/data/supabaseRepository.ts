@@ -83,6 +83,26 @@ export class SupabaseRepository implements BudgetRepository {
     }
   }
 
+  async listExpenseNames(): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('description')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const r of data ?? []) {
+      const d = (r.description ?? '').trim();
+      const key = d.toLowerCase();
+      if (d && !seen.has(key)) {
+        seen.add(key);
+        out.push(d);
+      }
+    }
+    return out;
+  }
+
   async listExpenses(month: MonthKey): Promise<Expense[]> {
     const { data, error } = await supabase
       .from('expenses')

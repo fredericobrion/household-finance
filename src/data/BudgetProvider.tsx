@@ -38,6 +38,7 @@ interface BudgetContextValue {
   goals: Goals;
   incomes: Income[];
   expenses: Expense[];
+  expenseNames: string[];
   saveGoals: (g: Goals) => Promise<void>;
   addExpense: (input: NewExpense) => Promise<void>;
   updateExpense: (id: string, patch: Partial<NewExpense>) => Promise<void>;
@@ -53,7 +54,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoals] = useState<Goals>({ ...DEFAULT_GOALS });
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenseNames, setExpenseNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const mergeName = useCallback((desc: string) => {
+    const d = desc.trim();
+    if (!d) return;
+    setExpenseNames((prev) =>
+      prev.some((n) => n.toLowerCase() === d.toLowerCase()) ? prev : [d, ...prev],
+    );
+  }, []);
 
   const refreshMonth = useCallback(async (m: MonthKey) => {
     const [inc, exp] = await Promise.all([
@@ -69,9 +79,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       setLoading(true);
       try {
-        const g = await repository.getGoals();
+        const [g, names] = await Promise.all([
+          repository.getGoals(),
+          repository.listExpenseNames(),
+        ]);
         if (!active) return;
         setGoals(g);
+        setExpenseNames(names);
         await refreshMonth(month);
       } catch (e) {
         if (active) alertError(e);
@@ -98,26 +112,28 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     async (input: NewExpense) => {
       try {
         await repository.addExpense(input);
+        mergeName(input.description);
         await refreshMonth(month);
       } catch (e) {
         alertError(e);
         throw e;
       }
     },
-    [month, refreshMonth],
+    [month, refreshMonth, mergeName],
   );
 
   const updateExpense = useCallback(
     async (id: string, patch: Partial<NewExpense>) => {
       try {
         await repository.updateExpense(id, patch);
+        if (patch.description) mergeName(patch.description);
         await refreshMonth(month);
       } catch (e) {
         alertError(e);
         throw e;
       }
     },
-    [month, refreshMonth],
+    [month, refreshMonth, mergeName],
   );
 
   const deleteExpense = useCallback(
@@ -167,6 +183,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       goals,
       incomes,
       expenses,
+      expenseNames,
       saveGoals,
       addExpense,
       updateExpense,
@@ -180,6 +197,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       goals,
       incomes,
       expenses,
+      expenseNames,
       saveGoals,
       addExpense,
       updateExpense,

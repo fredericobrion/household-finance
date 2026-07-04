@@ -15,6 +15,8 @@ export interface BudgetRepository {
   getGoals(): Promise<Goals>;
   saveGoals(goals: Goals): Promise<void>;
 
+  /** Nomes (descrições) distintos já usados, mais recentes primeiro. */
+  listExpenseNames(): Promise<string[]>;
   listExpenses(month: MonthKey): Promise<Expense[]>;
   addExpense(input: NewExpense): Promise<Expense>;
   updateExpense(id: string, patch: Partial<NewExpense>): Promise<Expense>;

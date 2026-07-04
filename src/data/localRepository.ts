@@ -47,6 +47,21 @@ export class LocalRepository implements BudgetRepository {
     await writeJson(K_GOALS, goals);
   }
 
+  async listExpenseNames(): Promise<string[]> {
+    const all = byNewestFirst(await readJson<Expense[]>(K_EXPENSES, []));
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const e of all) {
+      const d = e.description.trim();
+      const key = d.toLowerCase();
+      if (d && !seen.has(key)) {
+        seen.add(key);
+        out.push(d);
+      }
+    }
+    return out;
+  }
+
   async listExpenses(month: MonthKey): Promise<Expense[]> {
     const all = await readJson<Expense[]>(K_EXPENSES, []);
     return byNewestFirst(all.filter((e) => e.month === month));
