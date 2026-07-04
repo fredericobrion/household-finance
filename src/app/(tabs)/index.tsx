@@ -21,7 +21,7 @@ import { RecurringPickerModal } from '@/components/RecurringPickerModal';
 import { SummaryTable } from '@/components/SummaryTable';
 import { useBudget } from '@/data/BudgetProvider';
 import { computeSummary } from '@/lib/budget';
-import { formatCurrency, formatDateShort } from '@/lib/format';
+import { formatCurrency, ymdToBR } from '@/lib/format';
 import { CATEGORIES, categoryMeta } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Expense, RecurringExpense } from '@/types/budget';
@@ -106,11 +106,12 @@ export default function BudgetScreen() {
   }
 
   async function submitExpense(values: ExpenseFormValues) {
+    const payload = { ...values, month: values.date.slice(0, 7) };
     try {
       if (editing) {
-        await updateExpense(editing.id, values);
+        await updateExpense(editing.id, payload);
       } else {
-        await addExpense({ ...values, month });
+        await addExpense(payload);
       }
       setExpenseModal(false);
       setEditing(null);
@@ -130,7 +131,7 @@ export default function BudgetScreen() {
 
   async function submitInclude(values: ExpenseFormValues) {
     try {
-      await addExpense({ ...values, month });
+      await addExpense({ ...values, month: values.date.slice(0, 7) });
       setIncludeItem(null);
     } catch {
       // erro já exibido pelo provider; mantém o modal aberto
@@ -166,7 +167,7 @@ export default function BudgetScreen() {
             </Text>
           ) : null}
           <Text style={styles.expenseCat}>
-            {meta.label} · {formatDateShort(exp.createdAt)}
+            {meta.label} · {ymdToBR(exp.date)}
           </Text>
         </View>
         <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
@@ -287,6 +288,7 @@ export default function BudgetScreen() {
         visible={expenseModal}
         initial={editing}
         suggestions={expenseNames}
+        defaultMonth={month}
         onClose={() => {
           setExpenseModal(false);
           setEditing(null);
@@ -314,6 +316,7 @@ export default function BudgetScreen() {
         presetAmount={includeItem?.baseAmount ?? undefined}
         title="Incluir recorrente"
         existingNames={expenses.map((e) => e.description)}
+        defaultMonth={month}
         onClose={() => setIncludeItem(null)}
         onSubmit={submitInclude}
       />

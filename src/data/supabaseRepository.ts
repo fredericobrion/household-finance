@@ -27,6 +27,7 @@ interface ExpenseRow {
   category: CategoryKey;
   description: string | null;
   amount: number | string;
+  occurred_on: string;
   created_at: string;
 }
 
@@ -45,6 +46,7 @@ function toExpense(row: ExpenseRow): Expense {
     category: row.category,
     description: row.description ?? '',
     amount: Number(row.amount),
+    date: row.occurred_on,
     createdAt: row.created_at,
   };
 }
@@ -126,8 +128,9 @@ export class SupabaseRepository implements BudgetRepository {
   async listExpenses(month: MonthKey): Promise<Expense[]> {
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, reference_month, category, description, amount, created_at')
+      .select('id, reference_month, category, description, amount, occurred_on, created_at')
       .eq('reference_month', monthToDate(month))
+      .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []).map(toExpense);
@@ -141,8 +144,9 @@ export class SupabaseRepository implements BudgetRepository {
         category: input.category,
         description: input.description,
         amount: input.amount,
+        occurred_on: input.date,
       })
-      .select('id, reference_month, category, description, amount, created_at')
+      .select('id, reference_month, category, description, amount, occurred_on, created_at')
       .single();
     if (error) throw error;
     return toExpense(data);
@@ -154,12 +158,13 @@ export class SupabaseRepository implements BudgetRepository {
     if (patch.category !== undefined) update.category = patch.category;
     if (patch.description !== undefined) update.description = patch.description;
     if (patch.amount !== undefined) update.amount = patch.amount;
+    if (patch.date !== undefined) update.occurred_on = patch.date;
 
     const { data, error } = await supabase
       .from('expenses')
       .update(update)
       .eq('id', id)
-      .select('id, reference_month, category, description, amount, created_at')
+      .select('id, reference_month, category, description, amount, occurred_on, created_at')
       .single();
     if (error) throw error;
     return toExpense(data);

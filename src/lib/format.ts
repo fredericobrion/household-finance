@@ -22,6 +22,32 @@ export function normalizeText(s: string): string {
     .trim();
 }
 
+/** Hoje em 'YYYY-MM-DD' (horário local). */
+export function ymdToday(): string {
+  return dateToYmd(new Date());
+}
+
+/** Date -> 'YYYY-MM-DD' (local). */
+export function dateToYmd(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/** 'YYYY-MM-DD' -> Date local (meia-noite). */
+export function ymdToDate(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** 'YYYY-MM-DD' -> 'DD/MM/YY' (sem depender de fuso). */
+export function ymdToBR(ymd: string): string {
+  const [y, m, d] = ymd.split('-');
+  if (!y || !m || !d) return '';
+  return `${d}/${m}/${y.slice(-2)}`;
+}
+
 /** ISO -> "DD/MM/YY". */
 export function formatDateShort(iso: string): string {
   const d = new Date(iso);

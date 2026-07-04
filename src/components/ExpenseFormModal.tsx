@@ -1,3 +1,5 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -14,18 +16,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   amountToCents,
   centsToAmount,
+  dateToYmd,
   formatCurrency,
   normalizeText,
   onlyDigits,
+  ymdToBR,
+  ymdToDate,
+  ymdToday,
 } from '@/lib/format';
+import { currentMonthKey } from '@/lib/month';
 import { CATEGORIES } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
-import type { CategoryKey, Expense } from '@/types/budget';
+import type { CategoryKey, Expense, MonthKey } from '@/types/budget';
 
 export interface ExpenseFormValues {
   description: string;
   amount: number;
   category: CategoryKey;
+  date: string; // 'YYYY-MM-DD'
 }
 
 interface ExpenseFormModalProps {
@@ -39,6 +47,8 @@ interface ExpenseFormModalProps {
   title?: string;
   /** Descrições já lançadas no mês — para avisar de duplicado. */
   existingNames?: string[];
+  /** Mês selecionado — define o dia padrão (hoje, ou 1º dia se mês passado). */
+  defaultMonth: MonthKey;
   onClose: () => void;
   onSubmit: (values: ExpenseFormValues) => void;
 }
@@ -52,6 +62,7 @@ export function ExpenseFormModal({
   presetAmount,
   title,
   existingNames = [],
+  defaultMonth,
   onClose,
   onSubmit,
 }: ExpenseFormModalProps) {
@@ -59,19 +70,26 @@ export function ExpenseFormModal({
   const [description, setDescription] = useState('');
   const [amountText, setAmountText] = useState('');
   const [category, setCategory] = useState<CategoryKey | null>(null);
+  const [dateYmd, setDateYmd] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
+    const fallbackDate =
+      defaultMonth === currentMonthKey() ? ymdToday() : `${defaultMonth}-01`;
+    setShowPicker(false);
     if (initial) {
       setDescription(initial.description);
       setAmountText(amountToCents(initial.amount));
       setCategory(initial.category);
+      setDateYmd(initial.date ?? fallbackDate);
     } else {
       setDescription(presetDescription ?? '');
       setAmountText(presetAmount != null ? amountToCents(presetAmount) : '');
       setCategory(lockedCategory ?? null);
+      setDateYmd(fallbackDate);
     }
-  }, [visible, initial, presetDescription, presetAmount, lockedCategory]);
+  }, [visible, initial, presetDescription, presetAmount, lockedCategory, defaultMonth]);
 
   const amount = centsToAmount(amountText);
   const canSave = amount > 0 && category !== null;
@@ -93,7 +111,7 @@ export function ExpenseFormModal({
 
   function handleSave() {
     if (!canSave || category === null) return;
-    onSubmit({ description: description.trim(), amount, category });
+    onSubmit({ description: description.trim(), amount, category, date: dateYmd });
   }
 
   return (
@@ -142,6 +160,28 @@ export function ExpenseFormModal({
               value={amountText ? formatCurrency(amount) : ''}
               onChangeText={(text) => setAmountText(onlyDigits(text))}
             />
+
+            <Text style={styles.label}>Data</Text>
+            <TouchableOpacity
+              style={styles.dateField}
+              onPress={() => setShowPicker(true)}
+              activeOpacity={0.7}>
+              <Text style={styles.dateText}>{dateYmd ? ymdToBR(dateYmd) : '—'}</Text>
+              <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            {showPicker ? (
+              <DateTimePicker
+                value={dateYmd ? ymdToDate(dateYmd) : new Date()}
+                mode="date"
+                maximumDate={new Date()}
+                onChange={(event, selected) => {
+                  setShowPicker(false);
+                  if (event.type === 'set' && selected) {
+                    setDateYmd(dateToYmd(selected));
+                  }
+                }}
+              />
+            ) : null}
 
             {lockedCategory ? null : (
               <>
@@ -229,6 +269,19 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
+    color: Colors.text,
+    fontSize: 16,
+  },
+  dateField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  dateText: {
     color: Colors.text,
     fontSize: 16,
   },

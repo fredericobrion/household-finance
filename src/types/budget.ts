@@ -15,6 +15,7 @@ export interface Expense {
   category: CategoryKey;
   description: string;
   amount: number;
+  date: string; // dia do gasto, 'YYYY-MM-DD'
   createdAt: string; // ISO
 }
 
