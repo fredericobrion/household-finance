@@ -11,50 +11,30 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  amountToCents,
-  centsToAmount,
-  formatCurrency,
-  normalizeText,
-  onlyDigits,
-} from '@/lib/format';
+import { amountToCents, centsToAmount, formatCurrency, onlyDigits } from '@/lib/format';
 import { CATEGORIES } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
-import type { CategoryKey, Expense } from '@/types/budget';
+import type { CategoryKey, RecurringExpense } from '@/types/budget';
 
-export interface ExpenseFormValues {
+export interface RecurringFormValues {
   description: string;
-  amount: number;
   category: CategoryKey;
+  baseAmount: number | null;
 }
 
-interface ExpenseFormModalProps {
+interface RecurringFormModalProps {
   visible: boolean;
-  initial?: Expense | null;
-  suggestions?: string[];
-  /** Trava a categoria (esconde o seletor) — usado ao incluir recorrente. */
-  lockedCategory?: CategoryKey;
-  presetDescription?: string;
-  presetAmount?: number;
-  title?: string;
-  /** Descrições já lançadas no mês — para avisar de duplicado. */
-  existingNames?: string[];
+  initial?: RecurringExpense | null;
   onClose: () => void;
-  onSubmit: (values: ExpenseFormValues) => void;
+  onSubmit: (values: RecurringFormValues) => void;
 }
 
-export function ExpenseFormModal({
+export function RecurringFormModal({
   visible,
   initial,
-  suggestions = [],
-  lockedCategory,
-  presetDescription,
-  presetAmount,
-  title,
-  existingNames = [],
   onClose,
   onSubmit,
-}: ExpenseFormModalProps) {
+}: RecurringFormModalProps) {
   const insets = useSafeAreaInsets();
   const [description, setDescription] = useState('');
   const [amountText, setAmountText] = useState('');
@@ -62,38 +42,17 @@ export function ExpenseFormModal({
 
   useEffect(() => {
     if (!visible) return;
-    if (initial) {
-      setDescription(initial.description);
-      setAmountText(amountToCents(initial.amount));
-      setCategory(initial.category);
-    } else {
-      setDescription(presetDescription ?? '');
-      setAmountText(presetAmount != null ? amountToCents(presetAmount) : '');
-      setCategory(lockedCategory ?? null);
-    }
-  }, [visible, initial, presetDescription, presetAmount, lockedCategory]);
+    setDescription(initial?.description ?? '');
+    setAmountText(initial?.baseAmount != null ? amountToCents(initial.baseAmount) : '');
+    setCategory(initial?.category ?? null);
+  }, [visible, initial]);
 
-  const amount = centsToAmount(amountText);
-  const canSave = amount > 0 && category !== null;
-
-  const query = normalizeText(description);
-  const matches =
-    query.length === 0
-      ? []
-      : suggestions
-          .filter((n) => {
-            const nn = normalizeText(n);
-            return nn.startsWith(query) && nn !== query;
-          })
-          .slice(0, 6);
-
-  const alreadyAdded =
-    description.trim().length > 0 &&
-    existingNames.some((n) => normalizeText(n) === query);
+  const baseAmount = amountText ? centsToAmount(amountText) : null;
+  const canSave = description.trim().length > 0 && category !== null;
 
   function handleSave() {
     if (!canSave || category === null) return;
-    onSubmit({ description: description.trim(), amount, category });
+    onSubmit({ description: description.trim(), category, baseAmount });
   }
 
   return (
@@ -107,71 +66,48 @@ export function ExpenseFormModal({
         <View style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.xl }]}>
           <View style={styles.handle} />
           <Text style={styles.title}>
-            {title ?? (initial ? 'Editar gasto' : 'Novo gasto')}
+            {initial ? 'Editar recorrente' : 'Novo recorrente'}
           </Text>
 
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.label}>Descrição</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ex.: Mercado"
+              placeholder="Ex.: Internet"
               placeholderTextColor={Colors.textMuted}
               value={description}
               onChangeText={setDescription}
             />
-            {matches.length > 0 ? (
-              <View style={styles.suggestions}>
-                {matches.map((name) => (
-                  <TouchableOpacity
-                    key={name}
-                    style={styles.suggestionChip}
-                    onPress={() => setDescription(name)}
-                    activeOpacity={0.7}>
-                    <Text style={styles.suggestionText}>{name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : null}
 
-            <Text style={styles.label}>Valor</Text>
+            <Text style={styles.label}>Valor base (opcional)</Text>
             <TextInput
               style={styles.input}
               placeholder="R$ 0,00"
               placeholderTextColor={Colors.textMuted}
               keyboardType="numeric"
-              value={amountText ? formatCurrency(amount) : ''}
+              value={amountText ? formatCurrency(baseAmount ?? 0) : ''}
               onChangeText={(text) => setAmountText(onlyDigits(text))}
             />
 
-            {lockedCategory ? null : (
-              <>
-                <Text style={styles.label}>Categoria</Text>
-                <View style={styles.categoryGrid}>
-                  {CATEGORIES.map((c) => {
-                    const active = category === c.key;
-                    return (
-                      <TouchableOpacity
-                        key={c.key}
-                        onPress={() => setCategory(c.key)}
-                        activeOpacity={0.7}
-                        style={[styles.catChip, active && { borderColor: c.color }]}>
-                        <View style={[styles.dot, { backgroundColor: c.color }]} />
-                        <Text style={[styles.catText, active && styles.catTextActive]}>
-                          {c.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </>
-            )}
+            <Text style={styles.label}>Categoria</Text>
+            <View style={styles.categoryGrid}>
+              {CATEGORIES.map((c) => {
+                const active = category === c.key;
+                return (
+                  <TouchableOpacity
+                    key={c.key}
+                    onPress={() => setCategory(c.key)}
+                    activeOpacity={0.7}
+                    style={[styles.catChip, active && { borderColor: c.color }]}>
+                    <View style={[styles.dot, { backgroundColor: c.color }]} />
+                    <Text style={[styles.catText, active && styles.catTextActive]}>
+                      {c.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
-
-          {alreadyAdded ? (
-            <Text style={styles.warning}>
-              ⚠ Já existe um gasto “{description.trim()}” neste mês.
-            </Text>
-          ) : null}
 
           <View style={styles.actions}>
             <TouchableOpacity style={[styles.button, styles.cancel]} onPress={onClose}>
@@ -201,7 +137,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: Radius.lg,
     borderTopRightRadius: Radius.lg,
     padding: Spacing.lg,
-    paddingBottom: Spacing.xl,
     maxHeight: '88%',
   },
   handle: {
@@ -232,28 +167,15 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 16,
   },
-  suggestions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  suggestionChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  suggestionText: {
-    color: Colors.text,
-    fontSize: 13,
-  },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.sm,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   catChip: {
     flexDirection: 'row',
@@ -266,11 +188,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
   catText: {
     color: Colors.textSecondary,
     fontSize: 13,
@@ -278,12 +195,6 @@ const styles = StyleSheet.create({
   catTextActive: {
     color: Colors.text,
     fontWeight: '600',
-  },
-  warning: {
-    color: Colors.negative,
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: Spacing.md,
   },
   actions: {
     flexDirection: 'row',

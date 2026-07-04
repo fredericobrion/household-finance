@@ -17,13 +17,14 @@ import { DonutChart } from '@/components/DonutChart';
 import { ExpenseFormModal, type ExpenseFormValues } from '@/components/ExpenseFormModal';
 import { IncomeFormModal, type IncomeFormValues } from '@/components/IncomeFormModal';
 import { MonthSelector } from '@/components/MonthSelector';
+import { RecurringPickerModal } from '@/components/RecurringPickerModal';
 import { SummaryTable } from '@/components/SummaryTable';
 import { useBudget } from '@/data/BudgetProvider';
 import { computeSummary } from '@/lib/budget';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 import { CATEGORIES, categoryMeta } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
-import type { CategoryKey, Expense } from '@/types/budget';
+import type { CategoryKey, Expense, RecurringExpense } from '@/types/budget';
 
 export default function BudgetScreen() {
   const {
@@ -34,6 +35,7 @@ export default function BudgetScreen() {
     incomes,
     expenses,
     expenseNames,
+    recurring,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -45,6 +47,8 @@ export default function BudgetScreen() {
   const [expenseModal, setExpenseModal] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [incomeModal, setIncomeModal] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [includeItem, setIncludeItem] = useState<RecurringExpense | null>(null);
 
   const summary = useMemo(
     () => computeSummary(goals, incomes, expenses),
@@ -119,6 +123,15 @@ export default function BudgetScreen() {
     try {
       await addIncome({ ...values, month });
       setIncomeModal(false);
+    } catch {
+      // erro já exibido pelo provider; mantém o modal aberto
+    }
+  }
+
+  async function submitInclude(values: ExpenseFormValues) {
+    try {
+      await addExpense({ ...values, month });
+      setIncludeItem(null);
     } catch {
       // erro já exibido pelo provider; mantém o modal aberto
     }
@@ -259,6 +272,12 @@ export default function BudgetScreen() {
                 <Ionicons name="add" size={20} color="#000" />
                 <Text style={styles.addButtonText}>Adicionar gasto</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.includeButton}
+                onPress={() => setPickerVisible(true)}>
+                <Ionicons name="repeat-outline" size={18} color={Colors.accent} />
+                <Text style={styles.includeButtonText}>Incluir recorrente</Text>
+              </TouchableOpacity>
             </Card>
           </>
         )}
@@ -278,6 +297,25 @@ export default function BudgetScreen() {
         visible={incomeModal}
         onClose={() => setIncomeModal(false)}
         onSubmit={submitIncome}
+      />
+      <RecurringPickerModal
+        visible={pickerVisible}
+        recurring={recurring}
+        onClose={() => setPickerVisible(false)}
+        onPick={(item) => {
+          setPickerVisible(false);
+          setIncludeItem(item);
+        }}
+      />
+      <ExpenseFormModal
+        visible={includeItem !== null}
+        lockedCategory={includeItem?.category}
+        presetDescription={includeItem?.description}
+        presetAmount={includeItem?.baseAmount ?? undefined}
+        title="Incluir recorrente"
+        existingNames={expenses.map((e) => e.description)}
+        onClose={() => setIncludeItem(null)}
+        onSubmit={submitInclude}
       />
     </SafeAreaView>
   );
@@ -423,6 +461,22 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: '#000',
     fontWeight: '700',
+    fontSize: 15,
+  },
+  includeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  includeButtonText: {
+    color: Colors.accent,
+    fontWeight: '600',
     fontSize: 15,
   },
 });

@@ -8,12 +8,15 @@ import type {
   MonthKey,
   NewExpense,
   NewIncome,
+  NewRecurring,
+  RecurringExpense,
 } from '@/types/budget';
 import type { BudgetRepository } from './repository';
 
 const K_GOALS = 'budget:goals';
 const K_EXPENSES = 'budget:expenses';
 const K_INCOMES = 'budget:incomes';
+const K_RECURRING = 'budget:recurring';
 
 function uid(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -110,6 +113,43 @@ export class LocalRepository implements BudgetRepository {
     await writeJson(
       K_INCOMES,
       all.filter((i) => i.id !== id),
+    );
+  }
+
+  async listRecurring(): Promise<RecurringExpense[]> {
+    const all = await readJson<RecurringExpense[]>(K_RECURRING, []);
+    return [...all].sort((a, b) => a.description.localeCompare(b.description));
+  }
+
+  async addRecurring(input: NewRecurring): Promise<RecurringExpense> {
+    const all = await readJson<RecurringExpense[]>(K_RECURRING, []);
+    const item: RecurringExpense = {
+      ...input,
+      id: uid(),
+      createdAt: new Date().toISOString(),
+    };
+    all.push(item);
+    await writeJson(K_RECURRING, all);
+    return item;
+  }
+
+  async updateRecurring(
+    id: string,
+    patch: Partial<NewRecurring>,
+  ): Promise<RecurringExpense> {
+    const all = await readJson<RecurringExpense[]>(K_RECURRING, []);
+    const idx = all.findIndex((r) => r.id === id);
+    if (idx === -1) throw new Error('Recorrente não encontrado');
+    all[idx] = { ...all[idx], ...patch };
+    await writeJson(K_RECURRING, all);
+    return all[idx];
+  }
+
+  async deleteRecurring(id: string): Promise<void> {
+    const all = await readJson<RecurringExpense[]>(K_RECURRING, []);
+    await writeJson(
+      K_RECURRING,
+      all.filter((r) => r.id !== id),
     );
   }
 }

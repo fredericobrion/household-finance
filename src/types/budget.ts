@@ -31,3 +31,13 @@ export type Goals = Record<CategoryKey, number>;
 
 export type NewExpense = Omit<Expense, 'id' | 'createdAt'>;
 export type NewIncome = Omit<Income, 'id' | 'createdAt'>;
+
+export interface RecurringExpense {
+  id: string;
+  description: string;
+  category: CategoryKey;
+  baseAmount: number | null;
+  createdAt: string;
+}
+
+export type NewRecurring = Omit<RecurringExpense, 'id' | 'createdAt'>;

@@ -8,6 +8,8 @@ import type {
   MonthKey,
   NewExpense,
   NewIncome,
+  NewRecurring,
+  RecurringExpense,
 } from '@/types/budget';
 import type { BudgetRepository } from './repository';
 
@@ -53,6 +55,24 @@ function toIncome(row: IncomeRow): Income {
     month: dateToMonth(row.reference_month),
     description: row.description ?? '',
     amount: Number(row.amount),
+    createdAt: row.created_at,
+  };
+}
+
+interface RecurringRow {
+  id: string;
+  description: string;
+  category: CategoryKey;
+  base_amount: number | string | null;
+  created_at: string;
+}
+
+function toRecurring(row: RecurringRow): RecurringExpense {
+  return {
+    id: row.id,
+    description: row.description,
+    category: row.category,
+    baseAmount: row.base_amount === null ? null : Number(row.base_amount),
     createdAt: row.created_at,
   };
 }
@@ -176,6 +196,53 @@ export class SupabaseRepository implements BudgetRepository {
 
   async deleteIncome(id: string): Promise<void> {
     const { error } = await supabase.from('incomes').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async listRecurring(): Promise<RecurringExpense[]> {
+    const { data, error } = await supabase
+      .from('recurring_expenses')
+      .select('id, description, category, base_amount, created_at')
+      .order('description', { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(toRecurring);
+  }
+
+  async addRecurring(input: NewRecurring): Promise<RecurringExpense> {
+    const { data, error } = await supabase
+      .from('recurring_expenses')
+      .insert({
+        description: input.description,
+        category: input.category,
+        base_amount: input.baseAmount,
+      })
+      .select('id, description, category, base_amount, created_at')
+      .single();
+    if (error) throw error;
+    return toRecurring(data);
+  }
+
+  async updateRecurring(
+    id: string,
+    patch: Partial<NewRecurring>,
+  ): Promise<RecurringExpense> {
+    const update: Record<string, unknown> = {};
+    if (patch.description !== undefined) update.description = patch.description;
+    if (patch.category !== undefined) update.category = patch.category;
+    if (patch.baseAmount !== undefined) update.base_amount = patch.baseAmount;
+
+    const { data, error } = await supabase
+      .from('recurring_expenses')
+      .update(update)
+      .eq('id', id)
+      .select('id, description, category, base_amount, created_at')
+      .single();
+    if (error) throw error;
+    return toRecurring(data);
+  }
+
+  async deleteRecurring(id: string): Promise<void> {
+    const { error } = await supabase.from('recurring_expenses').delete().eq('id', id);
     if (error) throw error;
   }
 }
