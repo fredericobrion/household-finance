@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_GOALS } from '@/theme/categories';
 import type {
   Expense,
+  ExpenseSuggestion,
   Goals,
   Income,
   MonthKey,
@@ -50,16 +51,16 @@ export class LocalRepository implements BudgetRepository {
     await writeJson(K_GOALS, goals);
   }
 
-  async listExpenseNames(): Promise<string[]> {
+  async listExpenseSuggestions(): Promise<ExpenseSuggestion[]> {
     const all = byNewestFirst(await readJson<Expense[]>(K_EXPENSES, []));
     const seen = new Set<string>();
-    const out: string[] = [];
+    const out: ExpenseSuggestion[] = [];
     for (const e of all) {
       const d = e.description.trim();
       const key = d.toLowerCase();
       if (d && !seen.has(key)) {
         seen.add(key);
-        out.push(d);
+        out.push({ description: d, category: e.category });
       }
     }
     return out;

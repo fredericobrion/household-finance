@@ -3,6 +3,7 @@ import { CATEGORY_KEYS, EMPTY_GOALS } from '@/theme/categories';
 import type {
   CategoryKey,
   Expense,
+  ExpenseSuggestion,
   Goals,
   Income,
   MonthKey,
@@ -105,21 +106,21 @@ export class SupabaseRepository implements BudgetRepository {
     }
   }
 
-  async listExpenseNames(): Promise<string[]> {
+  async listExpenseSuggestions(): Promise<ExpenseSuggestion[]> {
     const { data, error } = await supabase
       .from('expenses')
-      .select('description')
+      .select('description, category')
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;
     const seen = new Set<string>();
-    const out: string[] = [];
+    const out: ExpenseSuggestion[] = [];
     for (const r of data ?? []) {
       const d = (r.description ?? '').trim();
       const key = d.toLowerCase();
       if (d && !seen.has(key)) {
         seen.add(key);
-        out.push(d);
+        out.push({ description: d, category: r.category as CategoryKey });
       }
     }
     return out;

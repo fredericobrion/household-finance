@@ -1,5 +1,6 @@
 import type {
   Expense,
+  ExpenseSuggestion,
   Goals,
   Income,
   MonthKey,
@@ -17,8 +18,8 @@ export interface BudgetRepository {
   getGoals(): Promise<Goals>;
   saveGoals(goals: Goals): Promise<void>;
 
-  /** Nomes (descrições) distintos já usados, mais recentes primeiro. */
-  listExpenseNames(): Promise<string[]>;
+  /** Descrições distintas já usadas + sua categoria, mais recentes primeiro. */
+  listExpenseSuggestions(): Promise<ExpenseSuggestion[]>;
   listExpenses(month: MonthKey): Promise<Expense[]>;
   addExpense(input: NewExpense): Promise<Expense>;
   updateExpense(id: string, patch: Partial<NewExpense>): Promise<Expense>;

@@ -34,7 +34,7 @@ export default function BudgetScreen() {
     goals,
     incomes,
     expenses,
-    expenseNames,
+    expenseSuggestions,
     recurring,
     addExpense,
     updateExpense,
@@ -287,7 +287,7 @@ export default function BudgetScreen() {
       <ExpenseFormModal
         visible={expenseModal}
         initial={editing}
-        suggestions={expenseNames}
+        suggestions={expenseSuggestions}
         defaultMonth={month}
         onClose={() => {
           setExpenseModal(false);

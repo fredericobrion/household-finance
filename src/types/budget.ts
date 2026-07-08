@@ -33,6 +33,12 @@ export type Goals = Record<CategoryKey, number>;
 export type NewExpense = Omit<Expense, 'id' | 'createdAt'>;
 export type NewIncome = Omit<Income, 'id' | 'createdAt'>;
 
+/** Sugestão de autocomplete: descrição já usada + a categoria correspondente. */
+export interface ExpenseSuggestion {
+  description: string;
+  category: CategoryKey;
+}
+
 export interface RecurringExpense {
   id: string;
   description: string;

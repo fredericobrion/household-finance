@@ -27,7 +27,7 @@ import {
 import { currentMonthKey } from '@/lib/month';
 import { CATEGORIES } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
-import type { CategoryKey, Expense, MonthKey } from '@/types/budget';
+import type { CategoryKey, Expense, ExpenseSuggestion, MonthKey } from '@/types/budget';
 
 export interface ExpenseFormValues {
   description: string;
@@ -39,7 +39,7 @@ export interface ExpenseFormValues {
 interface ExpenseFormModalProps {
   visible: boolean;
   initial?: Expense | null;
-  suggestions?: string[];
+  suggestions?: ExpenseSuggestion[];
   /** Trava a categoria (esconde o seletor) — usado ao incluir recorrente. */
   lockedCategory?: CategoryKey;
   presetDescription?: string;
@@ -99,11 +99,16 @@ export function ExpenseFormModal({
     query.length === 0
       ? []
       : suggestions
-          .filter((n) => {
-            const nn = normalizeText(n);
+          .filter((s) => {
+            const nn = normalizeText(s.description);
             return nn.startsWith(query) && nn !== query;
           })
           .slice(0, 6);
+
+  function applySuggestion(s: ExpenseSuggestion) {
+    setDescription(s.description);
+    if (!lockedCategory) setCategory(s.category);
+  }
 
   const alreadyAdded =
     description.trim().length > 0 &&
@@ -139,13 +144,13 @@ export function ExpenseFormModal({
             />
             {matches.length > 0 ? (
               <View style={styles.suggestions}>
-                {matches.map((name) => (
+                {matches.map((s) => (
                   <TouchableOpacity
-                    key={name}
+                    key={s.description}
                     style={styles.suggestionChip}
-                    onPress={() => setDescription(name)}
+                    onPress={() => applySuggestion(s)}
                     activeOpacity={0.7}>
-                    <Text style={styles.suggestionText}>{name}</Text>
+                    <Text style={styles.suggestionText}>{s.description}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

@@ -16,7 +16,9 @@ function alertError(e: unknown) {
 import { currentMonthKey } from '@/lib/month';
 import { DEFAULT_GOALS } from '@/theme/categories';
 import type {
+  CategoryKey,
   Expense,
+  ExpenseSuggestion,
   Goals,
   Income,
   MonthKey,
@@ -40,7 +42,7 @@ interface BudgetContextValue {
   goals: Goals;
   incomes: Income[];
   expenses: Expense[];
-  expenseNames: string[];
+  expenseSuggestions: ExpenseSuggestion[];
   recurring: RecurringExpense[];
   saveGoals: (g: Goals) => Promise<void>;
   addExpense: (input: NewExpense) => Promise<void>;
@@ -60,16 +62,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoals] = useState<Goals>({ ...DEFAULT_GOALS });
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [expenseNames, setExpenseNames] = useState<string[]>([]);
+  const [expenseSuggestions, setExpenseSuggestions] = useState<ExpenseSuggestion[]>([]);
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const mergeName = useCallback((desc: string) => {
+  const mergeSuggestion = useCallback((desc: string, category: CategoryKey) => {
     const d = desc.trim();
     if (!d) return;
-    setExpenseNames((prev) =>
-      prev.some((n) => n.toLowerCase() === d.toLowerCase()) ? prev : [d, ...prev],
-    );
+    setExpenseSuggestions((prev) => {
+      const rest = prev.filter((s) => s.description.toLowerCase() !== d.toLowerCase());
+      return [{ description: d, category }, ...rest];
+    });
   }, []);
 
   const refreshMonth = useCallback(async (m: MonthKey) => {
@@ -86,14 +89,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       setLoading(true);
       try {
-        const [g, names, rec] = await Promise.all([
+        const [g, sugg, rec] = await Promise.all([
           repository.getGoals(),
-          repository.listExpenseNames(),
+          repository.listExpenseSuggestions(),
           repository.listRecurring(),
         ]);
         if (!active) return;
         setGoals(g);
-        setExpenseNames(names);
+        setExpenseSuggestions(sugg);
         setRecurring(rec);
         await refreshMonth(month);
       } catch (e) {
@@ -121,28 +124,28 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     async (input: NewExpense) => {
       try {
         await repository.addExpense(input);
-        mergeName(input.description);
+        mergeSuggestion(input.description, input.category);
         await refreshMonth(month);
       } catch (e) {
         alertError(e);
         throw e;
       }
     },
-    [month, refreshMonth, mergeName],
+    [month, refreshMonth, mergeSuggestion],
   );
 
   const updateExpense = useCallback(
     async (id: string, patch: Partial<NewExpense>) => {
       try {
-        await repository.updateExpense(id, patch);
-        if (patch.description) mergeName(patch.description);
+        const updated = await repository.updateExpense(id, patch);
+        mergeSuggestion(updated.description, updated.category);
         await refreshMonth(month);
       } catch (e) {
         alertError(e);
         throw e;
       }
     },
-    [month, refreshMonth, mergeName],
+    [month, refreshMonth, mergeSuggestion],
   );
 
   const deleteExpense = useCallback(
@@ -225,7 +228,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       goals,
       incomes,
       expenses,
-      expenseNames,
+      expenseSuggestions,
       recurring,
       saveGoals,
       addExpense,
@@ -243,7 +246,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       goals,
       incomes,
       expenses,
-      expenseNames,
+      expenseSuggestions,
       recurring,
       saveGoals,
       addExpense,
