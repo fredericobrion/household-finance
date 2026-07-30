@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { addMonths } from '@/lib/month';
+import { addMonthsToDate } from '@/lib/installments';
 import { CATEGORY_KEYS, EMPTY_GOALS } from '@/theme/categories';
 import type {
   CategoryKey,
@@ -21,6 +23,9 @@ function monthToDate(month: MonthKey): string {
 function dateToMonth(date: string): MonthKey {
   return date.slice(0, 7);
 }
+function uid(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 interface ExpenseRow {
   id: string;
@@ -29,6 +34,9 @@ interface ExpenseRow {
   description: string | null;
   amount: number | string;
   occurred_on: string;
+  group_id: string | null;
+  installment_index: number;
+  installment_count: number;
   created_at: string;
 }
 
@@ -48,6 +56,9 @@ function toExpense(row: ExpenseRow): Expense {
     description: row.description ?? '',
     amount: Number(row.amount),
     date: row.occurred_on,
+    groupId: row.group_id,
+    installmentIndex: row.installment_index,
+    installmentCount: row.installment_count,
     createdAt: row.created_at,
   };
 }
@@ -129,7 +140,7 @@ export class SupabaseRepository implements BudgetRepository {
   async listExpenses(month: MonthKey): Promise<Expense[]> {
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, reference_month, category, description, amount, occurred_on, created_at')
+      .select('id, reference_month, category, description, amount, occurred_on, group_id, installment_index, installment_count, created_at')
       .eq('reference_month', monthToDate(month))
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false });
@@ -137,20 +148,29 @@ export class SupabaseRepository implements BudgetRepository {
     return (data ?? []).map(toExpense);
   }
 
-  async addExpense(input: NewExpense): Promise<Expense> {
+  async addExpense(input: NewExpense, installments = 1): Promise<Expense> {
+    const n = Math.max(1, Math.floor(installments));
+    const groupId = n > 1 ? uid() : null;
+    const perInstallment = Math.round((input.amount / n) * 100) / 100;
+    const rows = Array.from({ length: n }, (_, i) => ({
+      reference_month: monthToDate(addMonths(input.month, i)),
+      category: input.category,
+      description: input.description,
+      amount:
+        i === n - 1
+          ? Math.round((input.amount - perInstallment * (n - 1)) * 100) / 100
+          : perInstallment,
+      occurred_on: addMonthsToDate(input.date, i),
+      group_id: groupId,
+      installment_index: i + 1,
+      installment_count: n,
+    }));
     const { data, error } = await supabase
       .from('expenses')
-      .insert({
-        reference_month: monthToDate(input.month),
-        category: input.category,
-        description: input.description,
-        amount: input.amount,
-        occurred_on: input.date,
-      })
-      .select('id, reference_month, category, description, amount, occurred_on, created_at')
-      .single();
+      .insert(rows)
+      .select('id, reference_month, category, description, amount, occurred_on, group_id, installment_index, installment_count, created_at');
     if (error) throw error;
-    return toExpense(data);
+    return toExpense(data[0]);
   }
 
   async updateExpense(id: string, patch: Partial<NewExpense>): Promise<Expense> {
@@ -165,14 +185,23 @@ export class SupabaseRepository implements BudgetRepository {
       .from('expenses')
       .update(update)
       .eq('id', id)
-      .select('id, reference_month, category, description, amount, occurred_on, created_at')
+      .select('id, reference_month, category, description, amount, occurred_on, group_id, installment_index, installment_count, created_at')
       .single();
     if (error) throw error;
     return toExpense(data);
   }
 
   async deleteExpense(id: string): Promise<void> {
-    const { error } = await supabase.from('expenses').delete().eq('id', id);
+    const { data, error: findError } = await supabase
+      .from('expenses')
+      .select('group_id')
+      .eq('id', id)
+      .single();
+    if (findError) throw findError;
+    const query = supabase.from('expenses').delete();
+    const { error } = data.group_id
+      ? await query.eq('group_id', data.group_id)
+      : await query.eq('id', id);
     if (error) throw error;
   }
 

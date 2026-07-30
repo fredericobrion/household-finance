@@ -16,6 +16,9 @@ export interface Expense {
   description: string;
   amount: number;
   date: string; // dia do gasto, 'YYYY-MM-DD'
+  groupId: string | null;
+  installmentIndex: number;
+  installmentCount: number;
   createdAt: string; // ISO
 }
 
@@ -30,7 +33,10 @@ export interface Income {
 /** Percentual (0–100) por categoria. A soma deve ser 100. */
 export type Goals = Record<CategoryKey, number>;
 
-export type NewExpense = Omit<Expense, 'id' | 'createdAt'>;
+export type NewExpense = Omit<
+  Expense,
+  'id' | 'createdAt' | 'groupId' | 'installmentIndex' | 'installmentCount'
+>;
 export type NewIncome = Omit<Income, 'id' | 'createdAt'>;
 
 /** Sugestão de autocomplete: descrição já usada + a categoria correspondente. */

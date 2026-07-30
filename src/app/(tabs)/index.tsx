@@ -106,12 +106,13 @@ export default function BudgetScreen() {
   }
 
   async function submitExpense(values: ExpenseFormValues) {
-    const payload = { ...values, month: values.date.slice(0, 7) };
+    const { installments, ...expense } = values;
+    const payload = { ...expense, month: values.date.slice(0, 7) };
     try {
       if (editing) {
         await updateExpense(editing.id, payload);
       } else {
-        await addExpense(payload);
+        await addExpense(payload, installments);
       }
       setExpenseModal(false);
       setEditing(null);
@@ -131,7 +132,8 @@ export default function BudgetScreen() {
 
   async function submitInclude(values: ExpenseFormValues) {
     try {
-      await addExpense({ ...values, month: values.date.slice(0, 7) });
+      const { installments, ...expense } = values;
+      await addExpense({ ...expense, month: values.date.slice(0, 7) }, installments);
       setIncludeItem(null);
     } catch {
       // erro já exibido pelo provider; mantém o modal aberto
@@ -139,7 +141,13 @@ export default function BudgetScreen() {
   }
 
   function confirmDeleteExpense(expense: Expense) {
-    Alert.alert('Excluir gasto', `Remover "${expense.description || 'gasto'}"?`, [
+    const isInstallment = !!expense.groupId && expense.installmentCount > 1;
+    Alert.alert(
+      'Excluir gasto',
+      isInstallment
+        ? `Remover "${expense.description || 'gasto'}" e todas as ${expense.installmentCount} parcelas?`
+        : `Remover "${expense.description || 'gasto'}"?`,
+      [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -148,7 +156,8 @@ export default function BudgetScreen() {
           deleteExpense(expense.id).catch(() => {});
         },
       },
-    ]);
+      ],
+    );
   }
 
   function renderExpenseRow(exp: Expense, showName: boolean, indent = false) {
@@ -168,6 +177,7 @@ export default function BudgetScreen() {
           ) : null}
           <Text style={styles.expenseCat}>
             {meta.label} · {ymdToBR(exp.date)}
+            {exp.installmentCount > 1 ? ` · ${exp.installmentIndex}/${exp.installmentCount}` : ''}
           </Text>
         </View>
         <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
@@ -236,6 +246,16 @@ export default function BudgetScreen() {
 
             {/* Lista de gastos */}
             <Card title="Gastos lançados">
+              <TouchableOpacity style={styles.addButton} onPress={openNewExpense}>
+                <Ionicons name="add" size={20} color="#000" />
+                <Text style={styles.addButtonText}>Adicionar gasto</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.includeButton}
+                onPress={() => setPickerVisible(true)}>
+                <Ionicons name="repeat-outline" size={18} color={Colors.accent} />
+                <Text style={styles.includeButtonText}>Incluir recorrente</Text>
+              </TouchableOpacity>
               <CategoryFilter selected={filter} onSelect={setFilter} />
               {groups.length === 0 ? (
                 <Text style={styles.empty}>Nenhum gasto neste filtro.</Text>
@@ -269,16 +289,6 @@ export default function BudgetScreen() {
                   ),
                 )
               )}
-              <TouchableOpacity style={styles.addButton} onPress={openNewExpense}>
-                <Ionicons name="add" size={20} color="#000" />
-                <Text style={styles.addButtonText}>Adicionar gasto</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.includeButton}
-                onPress={() => setPickerVisible(true)}>
-                <Ionicons name="repeat-outline" size={18} color={Colors.accent} />
-                <Text style={styles.includeButtonText}>Incluir recorrente</Text>
-              </TouchableOpacity>
             </Card>
           </>
         )}

@@ -34,6 +34,7 @@ export interface ExpenseFormValues {
   amount: number;
   category: CategoryKey;
   date: string; // 'YYYY-MM-DD'
+  installments: number;
 }
 
 interface ExpenseFormModalProps {
@@ -71,6 +72,7 @@ export function ExpenseFormModal({
   const [amountText, setAmountText] = useState('');
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const [dateYmd, setDateYmd] = useState('');
+  const [installmentsText, setInstallmentsText] = useState('1');
   const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
@@ -78,6 +80,7 @@ export function ExpenseFormModal({
     const fallbackDate =
       defaultMonth === currentMonthKey() ? ymdToday() : `${defaultMonth}-01`;
     setShowPicker(false);
+    setInstallmentsText('1');
     if (initial) {
       setDescription(initial.description);
       setAmountText(amountToCents(initial.amount));
@@ -92,7 +95,9 @@ export function ExpenseFormModal({
   }, [visible, initial, presetDescription, presetAmount, lockedCategory, defaultMonth]);
 
   const amount = centsToAmount(amountText);
+  const installments = Math.max(1, Number(installmentsText) || 1);
   const canSave = amount > 0 && category !== null;
+  const canSplit = !initial;
 
   const query = normalizeText(description);
   const matches =
@@ -116,7 +121,13 @@ export function ExpenseFormModal({
 
   function handleSave() {
     if (!canSave || category === null) return;
-    onSubmit({ description: description.trim(), amount, category, date: dateYmd });
+    onSubmit({
+      description: description.trim(),
+      amount,
+      category,
+      date: dateYmd,
+      installments: canSplit ? installments : 1,
+    });
   }
 
   return (
@@ -142,6 +153,7 @@ export function ExpenseFormModal({
               value={description}
               onChangeText={setDescription}
             />
+
             {matches.length > 0 ? (
               <View style={styles.suggestions}>
                 {matches.map((s) => (
@@ -165,6 +177,26 @@ export function ExpenseFormModal({
               value={amountText ? formatCurrency(amount) : ''}
               onChangeText={(text) => setAmountText(onlyDigits(text))}
             />
+
+            {canSplit ? (
+              <>
+                <Text style={styles.label}>Dividir em quantas vezes?</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="1"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="numeric"
+                  value={installmentsText}
+                  onChangeText={(text) => setInstallmentsText(onlyDigits(text))}
+                  maxLength={2}
+                />
+                {installments > 1 ? (
+                  <Text style={styles.hint}>
+                    {installments}x de {formatCurrency(amount / installments)}. Uma parcela por mês.
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
 
             <Text style={styles.label}>Data</Text>
             <TouchableOpacity
@@ -342,6 +374,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     marginTop: Spacing.md,
+  },
+  hint: {
+    color: Colors.textMuted,
+    fontSize: 13,
+    marginTop: Spacing.sm,
   },
   actions: {
     flexDirection: 'row',
