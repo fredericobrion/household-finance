@@ -21,7 +21,7 @@ export interface BudgetRepository {
   /** Descrições distintas já usadas + sua categoria, mais recentes primeiro. */
   listExpenseSuggestions(): Promise<ExpenseSuggestion[]>;
   listExpenses(month: MonthKey): Promise<Expense[]>;
-  addExpense(input: NewExpense): Promise<Expense>;
+  addExpense(input: NewExpense, installments?: number): Promise<Expense>;
   updateExpense(id: string, patch: Partial<NewExpense>): Promise<Expense>;
   deleteExpense(id: string): Promise<void>;
 

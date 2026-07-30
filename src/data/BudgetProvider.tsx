@@ -45,7 +45,7 @@ interface BudgetContextValue {
   expenseSuggestions: ExpenseSuggestion[];
   recurring: RecurringExpense[];
   saveGoals: (g: Goals) => Promise<void>;
-  addExpense: (input: NewExpense) => Promise<void>;
+  addExpense: (input: NewExpense, installments?: number) => Promise<void>;
   updateExpense: (id: string, patch: Partial<NewExpense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addIncome: (input: NewIncome) => Promise<void>;
@@ -121,9 +121,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addExpense = useCallback(
-    async (input: NewExpense) => {
+    async (input: NewExpense, installments = 1) => {
       try {
-        await repository.addExpense(input);
+        await repository.addExpense(input, installments);
         mergeSuggestion(input.description, input.category);
         await refreshMonth(month);
       } catch (e) {

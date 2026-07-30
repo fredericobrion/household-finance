@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { addMonths } from '@/lib/month';
+import { addMonthsToDate } from '@/lib/installments';
 import { DEFAULT_GOALS } from '@/theme/categories';
 import type {
   Expense,
@@ -71,12 +73,34 @@ export class LocalRepository implements BudgetRepository {
     return byNewestFirst(all.filter((e) => e.month === month));
   }
 
-  async addExpense(input: NewExpense): Promise<Expense> {
+  async addExpense(input: NewExpense, installments = 1): Promise<Expense> {
     const all = await readJson<Expense[]>(K_EXPENSES, []);
-    const expense: Expense = { ...input, id: uid(), createdAt: new Date().toISOString() };
-    all.push(expense);
+    const n = Math.max(1, Math.floor(installments));
+    const now = new Date().toISOString();
+    const groupId = n > 1 ? uid() : null;
+    const perInstallment = Math.round((input.amount / n) * 100) / 100;
+    let firstExpense: Expense | null = null;
+
+    for (let i = 0; i < n; i += 1) {
+      const expense: Expense = {
+        ...input,
+        id: uid(),
+        month: addMonths(input.month, i),
+        date: addMonthsToDate(input.date, i),
+        amount:
+          i === n - 1
+            ? Math.round((input.amount - perInstallment * (n - 1)) * 100) / 100
+            : perInstallment,
+        groupId,
+        installmentIndex: i + 1,
+        installmentCount: n,
+        createdAt: now,
+      };
+      if (i === 0) firstExpense = expense;
+      all.push(expense);
+    }
     await writeJson(K_EXPENSES, all);
-    return expense;
+    return firstExpense!;
   }
 
   async updateExpense(id: string, patch: Partial<NewExpense>): Promise<Expense> {
@@ -90,9 +114,11 @@ export class LocalRepository implements BudgetRepository {
 
   async deleteExpense(id: string): Promise<void> {
     const all = await readJson<Expense[]>(K_EXPENSES, []);
+    const expense = all.find((item) => item.id === id);
+    if (!expense) return;
     await writeJson(
       K_EXPENSES,
-      all.filter((e) => e.id !== id),
+      expense.groupId ? all.filter((item) => item.groupId !== expense.groupId) : all.filter((item) => item.id !== id),
     );
   }
 
