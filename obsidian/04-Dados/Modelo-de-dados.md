@@ -1,0 +1,44 @@
+---
+tipo: dados
+fonte: Supabase
+atualizado: 2026-07-30
+---
+
+# Modelo de dados e Supabase
+
+## Configuração e autenticação
+
+`src/lib/supabase.ts` cria o cliente com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`. A sessão do Supabase fica em `AsyncStorage` e o app autentica anonimamente se não encontrar uma sessão.
+
+## Tabelas
+
+| Tabela | Finalidade |
+| --- | --- |
+| `households` | Casa compartilhada. |
+| `profiles` | Usuário autenticado e sua casa. |
+| `goals` | Meta percentual por categoria e casa. |
+| `incomes` | Rendas mensais. |
+| `expenses` | Gastos mensais, data real e dados de parcelas. |
+| `recurring_expenses` | Modelos de gastos recorrentes. |
+| `persons` | Pessoas das carteiras pessoais. |
+| `fun_entries` | Créditos e débitos das carteiras pessoais. |
+
+## Integridade e acesso
+
+- Todas as tabelas de domínio usam `household_id` e RLS.
+- `auth_household_id()` determina a casa do usuário autenticado; as policies permitem CRUD somente nessa casa.
+- O gatilho `handle_new_user()` cria um profile e, caso ainda não exista, a casa inicial e as seis metas padrão.
+- `persons` → `fun_entries` usa exclusão em cascata.
+- Valores não aceitam números negativos; em `fun_entries` o sinal deriva de `type`.
+
+## Migrações versionadas
+
+| Arquivo | Conteúdo |
+| --- | --- |
+| `0001_init.sql` | Estrutura inicial, metas, trigger de usuário e RLS. |
+| `0002_personal_wallets.sql` | Pessoas e carteiras pessoais. |
+| `0003_recurring.sql` | Modelos de gastos recorrentes. |
+| `0004_expense_date.sql` | `occurred_on` em gastos, com preenchimento dos registros antigos. |
+| `0005_expense_installments.sql` | Grupo e índices de parcelas para gastos do orçamento. |
+
+Ao mudar o banco, crie uma nova migração sequencial em `supabase/migrations/`, aplique-a no Supabase e atualize esta nota.
