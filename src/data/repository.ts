@@ -7,7 +7,9 @@ import type {
   NewExpense,
   NewIncome,
   NewRecurring,
+  NewWorkExpense,
   RecurringExpense,
+  WorkExpense,
 } from '@/types/budget';
 
 /**
@@ -28,6 +30,10 @@ export interface BudgetRepository {
   listIncomes(month: MonthKey): Promise<Income[]>;
   addIncome(input: NewIncome): Promise<Income>;
   deleteIncome(id: string): Promise<void>;
+
+  listWorkExpenses(month: MonthKey): Promise<WorkExpense[]>;
+  addWorkExpense(input: NewWorkExpense): Promise<WorkExpense>;
+  deleteWorkExpense(id: string): Promise<void>;
 
   listRecurring(): Promise<RecurringExpense[]>;
   addRecurring(input: NewRecurring): Promise<RecurringExpense>;

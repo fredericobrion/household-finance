@@ -12,7 +12,9 @@ import type {
   NewExpense,
   NewIncome,
   NewRecurring,
+  NewWorkExpense,
   RecurringExpense,
+  WorkExpense,
 } from '@/types/budget';
 import type { BudgetRepository } from './repository';
 
@@ -20,6 +22,7 @@ const K_GOALS = 'budget:goals';
 const K_EXPENSES = 'budget:expenses';
 const K_INCOMES = 'budget:incomes';
 const K_RECURRING = 'budget:recurring';
+const K_WORK_EXPENSES = 'budget:work-expenses';
 
 function uid(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -141,6 +144,24 @@ export class LocalRepository implements BudgetRepository {
       K_INCOMES,
       all.filter((i) => i.id !== id),
     );
+  }
+
+  async listWorkExpenses(month: MonthKey): Promise<WorkExpense[]> {
+    const all = await readJson<WorkExpense[]>(K_WORK_EXPENSES, []);
+    return byNewestFirst(all.filter((expense) => expense.month === month));
+  }
+
+  async addWorkExpense(input: NewWorkExpense): Promise<WorkExpense> {
+    const all = await readJson<WorkExpense[]>(K_WORK_EXPENSES, []);
+    const expense: WorkExpense = { ...input, id: uid(), createdAt: new Date().toISOString() };
+    all.push(expense);
+    await writeJson(K_WORK_EXPENSES, all);
+    return expense;
+  }
+
+  async deleteWorkExpense(id: string): Promise<void> {
+    const all = await readJson<WorkExpense[]>(K_WORK_EXPENSES, []);
+    await writeJson(K_WORK_EXPENSES, all.filter((expense) => expense.id !== id));
   }
 
   async listRecurring(): Promise<RecurringExpense[]> {

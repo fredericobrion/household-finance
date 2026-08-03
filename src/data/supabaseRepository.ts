@@ -12,7 +12,9 @@ import type {
   NewExpense,
   NewIncome,
   NewRecurring,
+  NewWorkExpense,
   RecurringExpense,
+  WorkExpense,
 } from '@/types/budget';
 import type { BudgetRepository } from './repository';
 
@@ -48,6 +50,14 @@ interface IncomeRow {
   created_at: string;
 }
 
+interface WorkExpenseRow {
+  id: string;
+  reference_month: string;
+  description: string | null;
+  amount: number | string;
+  created_at: string;
+}
+
 function toExpense(row: ExpenseRow): Expense {
   return {
     id: row.id,
@@ -64,6 +74,16 @@ function toExpense(row: ExpenseRow): Expense {
 }
 
 function toIncome(row: IncomeRow): Income {
+  return {
+    id: row.id,
+    month: dateToMonth(row.reference_month),
+    description: row.description ?? '',
+    amount: Number(row.amount),
+    createdAt: row.created_at,
+  };
+}
+
+function toWorkExpense(row: WorkExpenseRow): WorkExpense {
   return {
     id: row.id,
     month: dateToMonth(row.reference_month),
@@ -231,6 +251,35 @@ export class SupabaseRepository implements BudgetRepository {
 
   async deleteIncome(id: string): Promise<void> {
     const { error } = await supabase.from('incomes').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async listWorkExpenses(month: MonthKey): Promise<WorkExpense[]> {
+    const { data, error } = await supabase
+      .from('work_expenses')
+      .select('id, reference_month, description, amount, created_at')
+      .eq('reference_month', monthToDate(month))
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(toWorkExpense);
+  }
+
+  async addWorkExpense(input: NewWorkExpense): Promise<WorkExpense> {
+    const { data, error } = await supabase
+      .from('work_expenses')
+      .insert({
+        reference_month: monthToDate(input.month),
+        description: input.description,
+        amount: input.amount,
+      })
+      .select('id, reference_month, description, amount, created_at')
+      .single();
+    if (error) throw error;
+    return toWorkExpense(data);
+  }
+
+  async deleteWorkExpense(id: string): Promise<void> {
+    const { error } = await supabase.from('work_expenses').delete().eq('id', id);
     if (error) throw error;
   }
 
