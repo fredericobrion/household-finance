@@ -1,7 +1,7 @@
 ---
 tipo: dados
 fonte: Supabase
-atualizado: 2026-07-30
+atualizado: 2026-08-03
 ---
 
 # Modelo de dados e Supabase
@@ -18,6 +18,7 @@ atualizado: 2026-07-30
 | `profiles` | Usuário autenticado e sua casa. |
 | `goals` | Meta percentual por categoria e casa. |
 | `incomes` | Rendas mensais. |
+| `work_expenses` | Gastos profissionais mensais, deduzidos da renda disponível. |
 | `expenses` | Gastos mensais, data real e dados de parcelas. |
 | `recurring_expenses` | Modelos de gastos recorrentes. |
 | `persons` | Pessoas das carteiras pessoais. |
@@ -40,5 +41,6 @@ atualizado: 2026-07-30
 | `0003_recurring.sql` | Modelos de gastos recorrentes. |
 | `0004_expense_date.sql` | `occurred_on` em gastos, com preenchimento dos registros antigos. |
 | `0005_expense_installments.sql` | Grupo e índices de parcelas para gastos do orçamento. |
+| `0006_work_expenses.sql` | Gastos com trabalho mensais, índice e política RLS. |
 
 Ao mudar o banco, crie uma nova migração sequencial em `supabase/migrations/`, aplique-a no Supabase e atualize esta nota.

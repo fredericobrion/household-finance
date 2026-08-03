@@ -33,6 +33,7 @@ export default function BudgetScreen() {
     loading,
     goals,
     incomes,
+    workExpenses,
     expenses,
     expenseSuggestions,
     recurring,
@@ -41,18 +42,21 @@ export default function BudgetScreen() {
     deleteExpense,
     addIncome,
     deleteIncome,
+    addWorkExpense,
+    deleteWorkExpense,
   } = useBudget();
 
   const [filter, setFilter] = useState<CategoryKey | 'all'>('all');
   const [expenseModal, setExpenseModal] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [incomeModal, setIncomeModal] = useState(false);
+  const [workExpenseModal, setWorkExpenseModal] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [includeItem, setIncludeItem] = useState<RecurringExpense | null>(null);
 
   const summary = useMemo(
-    () => computeSummary(goals, incomes, expenses),
-    [goals, incomes, expenses],
+    () => computeSummary(goals, incomes, expenses, workExpenses),
+    [goals, incomes, expenses, workExpenses],
   );
 
   const donutData = useMemo(
@@ -125,6 +129,15 @@ export default function BudgetScreen() {
     try {
       await addIncome({ ...values, month });
       setIncomeModal(false);
+    } catch {
+      // erro já exibido pelo provider; mantém o modal aberto
+    }
+  }
+
+  async function submitWorkExpense(values: IncomeFormValues) {
+    try {
+      await addWorkExpense({ ...values, month });
+      setWorkExpenseModal(false);
     } catch {
       // erro já exibido pelo provider; mantém o modal aberto
     }
@@ -221,6 +234,35 @@ export default function BudgetScreen() {
               </TouchableOpacity>
             </Card>
 
+            {/* Gastos com trabalho */}
+            <Card title="Gastos com trabalho">
+              <Text style={styles.workExpenseTotal}>
+                - {formatCurrency(summary.totalWorkExpenses)}
+              </Text>
+              <Text style={styles.availableIncome}>
+                Disponível para o orçamento: {formatCurrency(summary.availableIncome)}
+              </Text>
+              {workExpenses.map((expense) => (
+                <View key={expense.id} style={styles.lineItem}>
+                  <Text style={styles.lineDesc} numberOfLines={1}>
+                    {expense.description || 'Gasto com trabalho'}
+                  </Text>
+                  <Text style={styles.lineAmount}>{formatCurrency(expense.amount)}</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      deleteWorkExpense(expense.id).catch(() => {});
+                    }}
+                    hitSlop={8}>
+                    <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+              <TouchableOpacity style={styles.addInline} onPress={() => setWorkExpenseModal(true)}>
+                <Ionicons name="add" size={18} color={Colors.accent} />
+                <Text style={styles.addInlineText}>Lançar gasto com trabalho</Text>
+              </TouchableOpacity>
+            </Card>
+
             {/* Gráfico */}
             <Card title="Gastos">
               <View style={styles.chartWrap}>
@@ -310,6 +352,13 @@ export default function BudgetScreen() {
         onClose={() => setIncomeModal(false)}
         onSubmit={submitIncome}
       />
+      <IncomeFormModal
+        visible={workExpenseModal}
+        title="Lançar gasto com trabalho"
+        descriptionPlaceholder="Ex.: Imposto"
+        onClose={() => setWorkExpenseModal(false)}
+        onSubmit={submitWorkExpense}
+      />
       <RecurringPickerModal
         visible={pickerVisible}
         recurring={recurring}
@@ -348,6 +397,16 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 26,
     fontWeight: '800',
+  },
+  workExpenseTotal: {
+    color: Colors.negative,
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  availableIncome: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    marginTop: Spacing.xs,
   },
   lineItem: {
     flexDirection: 'row',

@@ -30,6 +30,15 @@ export interface Income {
   createdAt: string; // ISO
 }
 
+/** Custo profissional do mês, abatido da renda disponível para o orçamento. */
+export interface WorkExpense {
+  id: string;
+  month: MonthKey;
+  description: string;
+  amount: number;
+  createdAt: string; // ISO
+}
+
 /** Percentual (0–100) por categoria. A soma deve ser 100. */
 export type Goals = Record<CategoryKey, number>;
 
@@ -38,6 +47,7 @@ export type NewExpense = Omit<
   'id' | 'createdAt' | 'groupId' | 'installmentIndex' | 'installmentCount'
 >;
 export type NewIncome = Omit<Income, 'id' | 'createdAt'>;
+export type NewWorkExpense = Omit<WorkExpense, 'id' | 'createdAt'>;
 
 /** Sugestão de autocomplete: descrição já usada + a categoria correspondente. */
 export interface ExpenseSuggestion {

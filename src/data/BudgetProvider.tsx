@@ -25,7 +25,9 @@ import type {
   NewExpense,
   NewIncome,
   NewRecurring,
+  NewWorkExpense,
   RecurringExpense,
+  WorkExpense,
 } from '@/types/budget';
 import type { BudgetRepository } from './repository';
 import { SupabaseRepository } from './supabaseRepository';
@@ -41,6 +43,7 @@ interface BudgetContextValue {
   loading: boolean;
   goals: Goals;
   incomes: Income[];
+  workExpenses: WorkExpense[];
   expenses: Expense[];
   expenseSuggestions: ExpenseSuggestion[];
   recurring: RecurringExpense[];
@@ -50,6 +53,8 @@ interface BudgetContextValue {
   deleteExpense: (id: string) => Promise<void>;
   addIncome: (input: NewIncome) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
+  addWorkExpense: (input: NewWorkExpense) => Promise<void>;
+  deleteWorkExpense: (id: string) => Promise<void>;
   addRecurring: (input: NewRecurring) => Promise<void>;
   updateRecurring: (id: string, patch: Partial<NewRecurring>) => Promise<void>;
   deleteRecurring: (id: string) => Promise<void>;
@@ -61,6 +66,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [month, setMonth] = useState<MonthKey>(currentMonthKey());
   const [goals, setGoals] = useState<Goals>({ ...DEFAULT_GOALS });
   const [incomes, setIncomes] = useState<Income[]>([]);
+  const [workExpenses, setWorkExpenses] = useState<WorkExpense[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expenseSuggestions, setExpenseSuggestions] = useState<ExpenseSuggestion[]>([]);
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
@@ -76,12 +82,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshMonth = useCallback(async (m: MonthKey) => {
-    const [inc, exp] = await Promise.all([
+    const [inc, exp, work] = await Promise.all([
       repository.listIncomes(m),
       repository.listExpenses(m),
+      repository.listWorkExpenses(m),
     ]);
     setIncomes(inc);
     setExpenses(exp);
+    setWorkExpenses(work);
   }, []);
 
   useEffect(() => {
@@ -187,6 +195,32 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     [month, refreshMonth],
   );
 
+  const addWorkExpense = useCallback(
+    async (input: NewWorkExpense) => {
+      try {
+        await repository.addWorkExpense(input);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
+    },
+    [month, refreshMonth],
+  );
+
+  const deleteWorkExpense = useCallback(
+    async (id: string) => {
+      try {
+        await repository.deleteWorkExpense(id);
+        await refreshMonth(month);
+      } catch (e) {
+        alertError(e);
+        throw e;
+      }
+    },
+    [month, refreshMonth],
+  );
+
   const addRecurring = useCallback(async (input: NewRecurring) => {
     try {
       await repository.addRecurring(input);
@@ -227,6 +261,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       loading,
       goals,
       incomes,
+      workExpenses,
       expenses,
       expenseSuggestions,
       recurring,
@@ -236,6 +271,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       deleteExpense,
       addIncome,
       deleteIncome,
+      addWorkExpense,
+      deleteWorkExpense,
       addRecurring,
       updateRecurring,
       deleteRecurring,
@@ -245,6 +282,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       loading,
       goals,
       incomes,
+      workExpenses,
       expenses,
       expenseSuggestions,
       recurring,
@@ -254,6 +292,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       deleteExpense,
       addIncome,
       deleteIncome,
+      addWorkExpense,
+      deleteWorkExpense,
       addRecurring,
       updateRecurring,
       deleteRecurring,

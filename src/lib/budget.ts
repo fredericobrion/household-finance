@@ -1,5 +1,5 @@
 import { CATEGORIES } from '@/theme/categories';
-import type { CategoryKey, Expense, Goals, Income } from '@/types/budget';
+import type { CategoryKey, Expense, Goals, Income, WorkExpense } from '@/types/budget';
 
 export interface SummaryRow {
   key: CategoryKey;
@@ -7,16 +7,18 @@ export interface SummaryRow {
   color: string;
   goalPct: number;
   spent: number;
-  shouldSpend: number; // renda total * meta%
+  shouldSpend: number; // renda disponível * meta%
   usedPct: number; // spent / shouldSpend
-  totalPct: number; // spent / renda total
+  totalPct: number; // spent / renda disponível
 }
 
 export interface BudgetSummary {
   rows: SummaryRow[];
   totalIncome: number;
+  totalWorkExpenses: number;
+  availableIncome: number;
   totalSpent: number;
-  usedPct: number; // totalSpent / totalIncome
+  usedPct: number; // totalSpent / availableIncome
 }
 
 export function sumAmounts(list: { amount: number }[]): number {
@@ -27,21 +29,24 @@ export function computeSummary(
   goals: Goals,
   incomes: Income[],
   expenses: Expense[],
+  workExpenses: WorkExpense[] = [],
 ): BudgetSummary {
   const totalIncome = sumAmounts(incomes);
+  const totalWorkExpenses = sumAmounts(workExpenses);
+  const availableIncome = totalIncome - totalWorkExpenses;
   const totalSpent = sumAmounts(expenses);
 
   const rows: SummaryRow[] = CATEGORIES.map(({ key, label, color }) => {
     const spent = sumAmounts(expenses.filter((e) => e.category === key));
     const goalPct = goals[key] ?? 0;
-    const shouldSpend = (totalIncome * goalPct) / 100;
+    const shouldSpend = (Math.max(0, availableIncome) * goalPct) / 100;
     const usedPct = shouldSpend > 0 ? (spent / shouldSpend) * 100 : 0;
-    const totalPct = totalIncome > 0 ? (spent / totalIncome) * 100 : 0;
+    const totalPct = availableIncome > 0 ? (spent / availableIncome) * 100 : 0;
     return { key, label, color, goalPct, spent, shouldSpend, usedPct, totalPct };
   });
 
-  const usedPct = totalIncome > 0 ? (totalSpent / totalIncome) * 100 : 0;
-  return { rows, totalIncome, totalSpent, usedPct };
+  const usedPct = availableIncome > 0 ? (totalSpent / availableIncome) * 100 : 0;
+  return { rows, totalIncome, totalWorkExpenses, availableIncome, totalSpent, usedPct };
 }
 
 export function goalsSum(goals: Goals): number {

@@ -12,6 +12,8 @@ const COL = {
   total: 80,
 };
 const TABLE_WIDTH = COL.name + COL.spent + COL.should + COL.used + COL.total;
+const FOOTER_ITEM_WIDTH = 150;
+const FOOTER_WIDTH = FOOTER_ITEM_WIDTH * 3;
 
 function usedColor(usedPct: number, hasGoal: boolean): string {
   if (!hasGoal) return Colors.textSecondary;
@@ -19,7 +21,7 @@ function usedColor(usedPct: number, hasGoal: boolean): string {
 }
 
 export function SummaryTable({ summary }: { summary: BudgetSummary }) {
-  const { rows, totalSpent, totalIncome, usedPct } = summary;
+  const { rows, totalSpent, availableIncome, usedPct } = summary;
 
   return (
     <View>
@@ -63,26 +65,28 @@ export function SummaryTable({ summary }: { summary: BudgetSummary }) {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.footerItem}>
-          <Text style={[styles.footerValue, { color: Colors.positive }]}>
-            {formatCurrency(totalSpent)}
-          </Text>
-          <Text style={styles.footerLabel}>Total gastos</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.footerScroll}>
+        <View style={[styles.footer, { width: FOOTER_WIDTH }]}>
+          <View style={styles.footerItem}>
+            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.positive }]}>
+              {formatCurrency(totalSpent)}
+            </Text>
+            <Text style={styles.footerLabel}>Total gastos</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.negative }]}>
+              {formatCurrency(availableIncome)}
+            </Text>
+            <Text style={styles.footerLabel}>Disponível</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.text }]}>
+              {formatPercent(usedPct, 0)}
+            </Text>
+            <Text style={styles.footerLabel}>Utilizado</Text>
+          </View>
         </View>
-        <View style={styles.footerItem}>
-          <Text style={[styles.footerValue, { color: Colors.negative }]}>
-            {formatCurrency(totalIncome)}
-          </Text>
-          <Text style={styles.footerLabel}>Renda total</Text>
-        </View>
-        <View style={styles.footerItem}>
-          <Text style={[styles.footerValue, { color: Colors.text }]}>
-            {formatPercent(usedPct, 0)}
-          </Text>
-          <Text style={styles.footerLabel}>Utilizado</Text>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -134,11 +138,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+  },
+  footerScroll: {
     marginTop: Spacing.lg,
   },
   footerItem: {
-    flex: 1,
+    width: FOOTER_ITEM_WIDTH,
   },
   footerValue: {
     fontSize: 16,

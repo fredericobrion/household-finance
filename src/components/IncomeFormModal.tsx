@@ -22,9 +22,17 @@ interface IncomeFormModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (values: IncomeFormValues) => void;
+  title?: string;
+  descriptionPlaceholder?: string;
 }
 
-export function IncomeFormModal({ visible, onClose, onSubmit }: IncomeFormModalProps) {
+export function IncomeFormModal({
+  visible,
+  onClose,
+  onSubmit,
+  title = 'Lançar renda',
+  descriptionPlaceholder = 'Ex.: Salário',
+}: IncomeFormModalProps) {
   const insets = useSafeAreaInsets();
   const [description, setDescription] = useState('');
   const [amountText, setAmountText] = useState('');
@@ -54,12 +62,12 @@ export function IncomeFormModal({ visible, onClose, onSubmit }: IncomeFormModalP
       <KeyboardAvoidingView behavior="padding" style={styles.backdrop}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.xl }]}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Lançar renda</Text>
+          <Text style={styles.title}>{title}</Text>
 
           <Text style={styles.label}>Descrição</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex.: Salário"
+            placeholder={descriptionPlaceholder}
             placeholderTextColor={Colors.textMuted}
             value={description}
             onChangeText={setDescription}
