@@ -8,6 +8,7 @@ create type budget_category as enum (
   'custos_fixos',
   'conforto',
   'metas',
+  'apartamento',
   'prazeres',
   'liberdade_financeira',
   'conhecimento'
@@ -96,6 +97,7 @@ begin
       (hh, 'custos_fixos', 30),
       (hh, 'conforto', 15),
       (hh, 'metas', 15),
+      (hh, 'apartamento', 0),
       (hh, 'prazeres', 10),
       (hh, 'liberdade_financeira', 25),
       (hh, 'conhecimento', 5);

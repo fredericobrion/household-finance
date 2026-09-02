@@ -1,7 +1,7 @@
 ---
 tipo: fluxo
 area: orçamento
-atualizado: 2026-08-03
+atualizado: 2026-09-02
 ---
 
 # Fluxo: Orçamento
@@ -10,12 +10,12 @@ atualizado: 2026-08-03
 
 Ao abrir ou trocar o mês, `BudgetProvider` busca em paralelo metas, sugestões, recorrentes, rendas, gastos com trabalho e gastos domésticos. A tela calcula o resumo com `computeSummary(goals, incomes, expenses, workExpenses)`.
 
-`totalIncome` é a soma das rendas do mês; os gastos com trabalho são abatidos desse valor para formar a renda disponível. `totalSpent` é a soma somente dos gastos domésticos. Para cada categoria, o limite esperado é `renda disponível × meta / 100`; a porcentagem usada é `gasto / limite`.
+`totalIncome` é a soma das rendas do mês; os gastos com trabalho são abatidos desse valor para formar os **ganhos líquidos**. `totalSpent` é a soma somente dos gastos domésticos e o **saldo restante** é `ganhos líquidos - total gastos`. Para cada categoria, o limite esperado é `ganhos líquidos × meta / 100`; a porcentagem usada é `gasto / limite`.
 
 ## Lançamentos
 
-- **Renda:** pertence ao mês visualizado, pode ser excluída e não é editável pela interface atual.
-- **Gasto com trabalho:** pertence ao mês visualizado, tem descrição e valor, não se vincula a uma renda específica e pode ser excluído. Não integra nenhuma categoria doméstica nem o gráfico de gastos; reduz a renda disponível antes da distribuição das metas.
+- **Renda:** pertence ao mês visualizado, pode ser excluída e não é editável pela interface atual. A lista mostra a data em que foi adicionada.
+- **Gasto com trabalho:** pertence ao mês visualizado, tem descrição e valor, não se vincula a uma renda específica e pode ser excluído. A lista mostra a data em que foi adicionado. Não integra nenhuma categoria doméstica nem o gráfico de gastos; reduz os ganhos líquidos antes da distribuição das metas.
 - **Gasto:** tem categoria, descrição, valor e data. O mês de referência é derivado dos sete primeiros caracteres da data (`YYYY-MM`).
 - **Sugestões:** descrições de gastos existentes são deduplicadas sem diferenciar maiúsculas/minúsculas; ao escolher uma, a categoria correspondente é preenchida.
 - **Agrupamento visual:** gastos com a mesma descrição no mesmo filtro aparecem juntos na lista. Isso é apenas apresentação, não vínculo de banco.
@@ -28,4 +28,4 @@ Editar altera somente o lançamento selecionado. Excluir qualquer parcela de um 
 
 ## Recorrentes
 
-Um recorrente possui descrição, categoria e valor-base opcional. Selecioná-lo no Orçamento abre o formulário de gasto com categoria, descrição e possivelmente valor preenchidos. A confirmação cria um gasto comum; o modelo permanece inalterado.
+Um recorrente possui descrição, categoria e valor-base opcional. Selecioná-lo no Orçamento abre o formulário de gasto com categoria, descrição e possivelmente valor preenchidos. A confirmação cria um gasto comum; o modelo permanece inalterado. Há um espaçamento visual entre o botão de inclusão e o filtro de categoria.

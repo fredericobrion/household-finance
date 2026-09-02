@@ -21,7 +21,8 @@ function usedColor(usedPct: number, hasGoal: boolean): string {
 }
 
 export function SummaryTable({ summary }: { summary: BudgetSummary }) {
-  const { rows, totalSpent, availableIncome, usedPct } = summary;
+  const { rows, totalSpent, availableIncome } = summary;
+  const remainingBalance = availableIncome - totalSpent;
 
   return (
     <View>
@@ -69,21 +70,26 @@ export function SummaryTable({ summary }: { summary: BudgetSummary }) {
         <View style={[styles.footer, { width: FOOTER_WIDTH }]}>
           <View style={styles.footerItem}>
             <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.positive }]}>
+              {formatCurrency(availableIncome)}
+            </Text>
+            <Text style={styles.footerLabel}>Ganhos líquidos</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.negative }]}>
               {formatCurrency(totalSpent)}
             </Text>
             <Text style={styles.footerLabel}>Total gastos</Text>
           </View>
           <View style={styles.footerItem}>
-            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.negative }]}>
-              {formatCurrency(availableIncome)}
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.footerValue,
+                { color: remainingBalance >= 0 ? Colors.positive : Colors.negative },
+              ]}>
+              {formatCurrency(remainingBalance)}
             </Text>
-            <Text style={styles.footerLabel}>Disponível</Text>
-          </View>
-          <View style={styles.footerItem}>
-            <Text numberOfLines={1} style={[styles.footerValue, { color: Colors.text }]}>
-              {formatPercent(usedPct, 0)}
-            </Text>
-            <Text style={styles.footerLabel}>Utilizado</Text>
+            <Text style={styles.footerLabel}>Saldo restante</Text>
           </View>
         </View>
       </ScrollView>

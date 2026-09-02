@@ -2,6 +2,7 @@ export type CategoryKey =
   | 'custos_fixos'
   | 'conforto'
   | 'metas'
+  | 'apartamento'
   | 'prazeres'
   | 'liberdade_financeira'
   | 'conhecimento';
