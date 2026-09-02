@@ -1,7 +1,7 @@
 ---
 tipo: dados
 fonte: Supabase
-atualizado: 2026-08-03
+atualizado: 2026-09-02
 ---
 
 # Modelo de dados e Supabase
@@ -28,7 +28,7 @@ atualizado: 2026-08-03
 
 - Todas as tabelas de domínio usam `household_id` e RLS.
 - `auth_household_id()` determina a casa do usuário autenticado; as policies permitem CRUD somente nessa casa.
-- O gatilho `handle_new_user()` cria um profile e, caso ainda não exista, a casa inicial e as seis metas padrão.
+- O gatilho `handle_new_user()` cria um profile e, caso ainda não exista, a casa inicial e as sete metas padrão; Apartamento é criada com 0%.
 - `persons` → `fun_entries` usa exclusão em cascata.
 - Valores não aceitam números negativos; em `fun_entries` o sinal deriva de `type`.
 
@@ -42,5 +42,7 @@ atualizado: 2026-08-03
 | `0004_expense_date.sql` | `occurred_on` em gastos, com preenchimento dos registros antigos. |
 | `0005_expense_installments.sql` | Grupo e índices de parcelas para gastos do orçamento. |
 | `0006_work_expenses.sql` | Gastos com trabalho mensais, índice e política RLS. |
+| `0007_add_apartment_category.sql` | Adiciona `apartamento` ao enum de categorias. |
+| `0008_seed_apartment_goal.sql` | Cria a meta Apartamento com 0% nas casas existentes. |
 
 Ao mudar o banco, crie uma nova migração sequencial em `supabase/migrations/`, aplique-a no Supabase e atualize esta nota.

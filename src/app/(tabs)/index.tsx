@@ -21,7 +21,7 @@ import { RecurringPickerModal } from '@/components/RecurringPickerModal';
 import { SummaryTable } from '@/components/SummaryTable';
 import { useBudget } from '@/data/BudgetProvider';
 import { computeSummary } from '@/lib/budget';
-import { formatCurrency, ymdToBR } from '@/lib/format';
+import { formatCurrency, formatDateShort, ymdToBR } from '@/lib/format';
 import { CATEGORIES, categoryMeta } from '@/theme/categories';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import type { CategoryKey, Expense, RecurringExpense } from '@/types/budget';
@@ -215,9 +215,12 @@ export default function BudgetScreen() {
               <Text style={styles.incomeTotal}>{formatCurrency(summary.totalIncome)}</Text>
               {incomes.map((inc) => (
                 <View key={inc.id} style={styles.lineItem}>
-                  <Text style={styles.lineDesc} numberOfLines={1}>
-                    {inc.description || 'Renda'}
-                  </Text>
+                  <View style={styles.lineInfo}>
+                    <Text style={styles.lineDesc} numberOfLines={1}>
+                      {inc.description || 'Renda'}
+                    </Text>
+                    <Text style={styles.lineDate}>Adicionado em {formatDateShort(inc.createdAt)}</Text>
+                  </View>
                   <Text style={styles.lineAmount}>{formatCurrency(inc.amount)}</Text>
                   <TouchableOpacity
                     onPress={() => {
@@ -244,9 +247,14 @@ export default function BudgetScreen() {
               </Text>
               {workExpenses.map((expense) => (
                 <View key={expense.id} style={styles.lineItem}>
-                  <Text style={styles.lineDesc} numberOfLines={1}>
-                    {expense.description || 'Gasto com trabalho'}
-                  </Text>
+                  <View style={styles.lineInfo}>
+                    <Text style={styles.lineDesc} numberOfLines={1}>
+                      {expense.description || 'Gasto com trabalho'}
+                    </Text>
+                    <Text style={styles.lineDate}>
+                      Adicionado em {formatDateShort(expense.createdAt)}
+                    </Text>
+                  </View>
                   <Text style={styles.lineAmount}>{formatCurrency(expense.amount)}</Text>
                   <TouchableOpacity
                     onPress={() => {
@@ -415,9 +423,16 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   lineDesc: {
-    flex: 1,
     color: Colors.textSecondary,
     fontSize: 14,
+  },
+  lineInfo: {
+    flex: 1,
+  },
+  lineDate: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
   },
   lineAmount: {
     color: Colors.text,
@@ -543,6 +558,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingVertical: Spacing.md,
     marginTop: Spacing.sm,
+    marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
   },

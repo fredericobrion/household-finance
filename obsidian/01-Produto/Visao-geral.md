@@ -1,7 +1,7 @@
 ---
 tipo: produto
 status: ativo
-atualizado: 2026-07-30
+atualizado: 2026-09-02
 ---
 
 # Visão geral
@@ -14,16 +14,16 @@ atualizado: 2026-07-30
 | --- | --- |
 | Orçamento | Registrar rendas e gastos por mês, categoria e data; editar ou excluir lançamentos. |
 | Resumo | Comparar gastos com as metas percentuais da renda mensal e visualizar gráfico de rosca. |
-| Metas | Configurar a distribuição percentual das seis categorias; a soma precisa ser 100%. |
+| Metas | Configurar a distribuição percentual das sete categorias; a soma precisa ser 100%. |
 | Recorrentes | Manter modelos de gastos repetidos e incluí-los manualmente no mês desejado. |
 | Parcelas | Dividir uma compra em parcelas mensais; excluir uma parcela exclui o grupo inteiro. |
 | Gastos pessoais | Criar pessoas e controlar saldo, gastos e saldo acumulado de cada carteira. |
 
 ## Categorias de orçamento
 
-`Custos fixos`, `Conforto`, `Metas`, `Prazeres`, `Liberdade financeira` e `Conhecimento`.
+`Custos fixos`, `Conforto`, `Metas`, `Apartamento`, `Prazeres`, `Liberdade financeira` e `Conhecimento`.
 
-As metas padrão são, respectivamente, 30%, 15%, 15%, 10%, 25% e 5%.
+As metas padrão são, respectivamente, 30%, 15%, 15%, 0%, 10%, 25% e 5%. A categoria Apartamento começa em 0% para preservar a distribuição existente; ela pode ser configurada na tela Metas.
 
 ## Limites e decisões atuais
 

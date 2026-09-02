@@ -1,9 +1,22 @@
 ---
 tipo: historico
-atualizado: 2026-08-03
+atualizado: 2026-09-02
 ---
 
 # Histórico de mudanças
+
+## 2026-09-02 — Ajustes no resumo e lançamentos
+
+- Exibida a data de inclusão de rendas e gastos com trabalho.
+- Reordenados os indicadores do resumo para ganhos líquidos, gastos e saldo restante.
+- Ajustado o espaçamento antes do filtro de categorias.
+- Detalhes: [[06-Desenvolvimento/Ajustes-resumo-e-lancamentos|registro de mudança]].
+
+## 2026-09-02 — Categoria Apartamento
+
+- Adicionada a categoria Apartamento, inicialmente com meta de 0%.
+- Criadas migrações para incluir a categoria e sua meta nas casas existentes.
+- Detalhes: [[06-Desenvolvimento/Categoria-apartamento|registro de mudança]].
 
 ## 2026-08-03 — Gastos com trabalho
 
