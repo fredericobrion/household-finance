@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, Te
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { amountToCents, centsToAmount, dateToYmd, formatCurrency, onlyDigits, ymdToday, ymdToBR, ymdToDate } from '@/lib/format';
-import { parseQuantity } from '@/lib/investments';
+import { contributionFromUnitPrice, parseQuantity } from '@/lib/investments';
 import { Colors, Radius, Spacing } from '@/theme/colors';
 import { INVESTMENT_TYPES, type Contribution, type ContributionInput, type Institution, type Investment, type InvestmentCategory, type InvestmentObjective, type NewInvestment, type MaturityInput } from '@/types/investment';
 
@@ -26,6 +26,8 @@ export function InvestmentFormModal({ form, institutions, onClose, onSubmit }: P
   const [type, setType] = useState('CDB');
   const [institution, setInstitution] = useState('');
   const [digits, setDigits] = useState('');
+  const [entryMode, setEntryMode] = useState<'total' | 'unit'>('total');
+  const [unitDigits, setUnitDigits] = useState('');
   const [quantityText, setQuantity] = useState('');
   const [date, setDate] = useState(ymdToday());
   const [dateOpen, setDateOpen] = useState(false);
@@ -37,6 +39,7 @@ export function InvestmentFormModal({ form, institutions, onClose, onSubmit }: P
   useEffect(() => {
     if (!form) return;
     const contribution = form.kind === 'contribution' ? form.contribution : undefined;
+    setEntryMode('total'); setUnitDigits('');
     setName(''); setCategory(form.kind === 'create' ? 'fixa' : form.investment.category);
     setType('CDB'); setInstitution('');
     setMaturity(form.kind === 'maturity' ? form.investment.maturity_date : null); setMaturityOpen(false);
@@ -45,10 +48,12 @@ export function InvestmentFormModal({ form, institutions, onClose, onSubmit }: P
     setDate(contribution?.occurred_on ?? ymdToday()); setDateOpen(false); setError('');
   }, [form]);
   if (!form) return null;
-  const amount = centsToAmount(digits);
   const quantity = parseQuantity(quantityText);
+  const unitMode = form.kind === 'contribution' && category === 'variavel' && entryMode === 'unit';
+  const unitPrice = centsToAmount(unitDigits);
+  const amount = unitMode ? contributionFromUnitPrice(unitPrice, quantity) : centsToAmount(digits);
   const isVariable = category === 'variavel' && form.kind !== 'value' && form.kind !== 'maturity';
-  const quantityValid = !isVariable || (amount > 0
+  const quantityValid = !isVariable || (form.kind === 'contribution' || amount > 0
     ? Number.isFinite(quantity) && quantity > 0 && quantity < 1e14
     : quantityText.trim() === '');
   const valid = Number.isFinite(amount) && amount < 1e12 && quantityValid
@@ -102,12 +107,20 @@ export function InvestmentFormModal({ form, institutions, onClose, onSubmit }: P
             <Text style={styles.help}>Deixe sem vencimento para reservas ou aplicações sem uma data definida.</Text>
           </>}
           {form.kind !== 'maturity' && <>
-            <Text style={styles.label}>{form.kind === 'value' ? 'Quanto vale hoje?' : form.kind === 'create' ? 'Investimento inicial (opcional)' : 'Valor aplicado'}</Text>
-            <TextInput accessibilityLabel="Valor em reais" style={styles.input} value={digits ? formatCurrency(amount) : ''} onChangeText={text => setDigits(onlyDigits(text))} keyboardType="numeric" maxLength={22} placeholder="R$ 0,00" placeholderTextColor={Colors.textMuted} editable={!saving} />
+            {form.kind === 'contribution' && isVariable && <>
+              <Text style={styles.label}>Como informar o aporte?</Text>
+              <View style={styles.choices}>
+                <Choice label="Valor total" selected={entryMode === 'total'} disabled={saving} onPress={() => setEntryMode('total')} />
+                <Choice label="Preço médio" selected={entryMode === 'unit'} disabled={saving} onPress={() => setEntryMode('unit')} />
+              </View>
+            </>}
+            <Text style={styles.label}>{unitMode ? 'Preço médio por unidade deste aporte' : form.kind === 'value' ? 'Quanto vale hoje?' : form.kind === 'create' ? 'Investimento inicial (opcional)' : 'Valor aplicado'}</Text>
+            <TextInput accessibilityLabel={unitMode ? "Preço médio por unidade" : "Valor em reais"} style={styles.input} value={unitMode ? (unitDigits ? formatCurrency(unitPrice) : '') : (digits ? formatCurrency(amount) : '')} onChangeText={text => unitMode ? setUnitDigits(onlyDigits(text)) : setDigits(onlyDigits(text))} keyboardType="numeric" maxLength={22} placeholder="R$ 0,00" placeholderTextColor={Colors.textMuted} editable={!saving} />
             {form.kind === 'value' && <Text style={styles.help}>Atualiza o saldo sem alterar o histórico de aportes ou o preço médio de compra.</Text>}
             {isVariable && <>
               <Text style={styles.label}>Quantidade de ações, cotas ou unidades</Text>
               <TextInput accessibilityLabel="Quantidade adquirida" style={styles.input} value={quantityText} onChangeText={setQuantity} keyboardType="decimal-pad" maxLength={23} placeholder="Ex.: 100 ou 2,5" placeholderTextColor={Colors.textMuted} editable={!saving} />
+              {unitMode && <Text style={styles.help}>{Number.isFinite(amount) && amount > 0 ? `Total do aporte: ${formatCurrency(amount)}` : 'Informe o preço por unidade e a quantidade para calcular o total.'} O preço informado é o desta compra; o preço médio da carteira será recalculado pelo histórico.</Text>}
               <Text style={styles.help}>{amount > 0 && quantity > 0 ? `Preço por unidade: ${formatCurrency(amount / quantity)}` : 'Informe valor e quantidade para calcular o preço por unidade. Sem investimento inicial, deixe a quantidade vazia.'}</Text>
               {!quantityValid && <Text style={styles.error}>Informe uma quantidade positiva (até 8 casas decimais) ou deixe vazia se o valor inicial for zero.</Text>}
             </>}

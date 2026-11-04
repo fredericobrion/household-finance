@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, BackHandler, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, BackHandler, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
@@ -22,6 +22,7 @@ export default function InvestmentsScreen({ objective }: { objective?: Investmen
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<InvestmentForm | null>(null);
   const [filters, setFilters] = useState<InvestmentFilters>({ ...EMPTY_INVESTMENT_FILTERS });
+  const [nameQuery, setNameQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,7 +56,7 @@ export default function InvestmentsScreen({ objective }: { objective?: Investmen
   }, [goBack]));
   const selected = investments.find(item => item.id === selectedId);
   const items = objective ? investments.filter(item => item.objective === objective) : investments;
-  const filteredItems = filterInvestments(items, filters);
+  const filteredItems = filterInvestments(items, filters, nameQuery);
   const activeFilters = Object.values(filters).filter(Boolean).length;
   const maturityYears = [...new Set(items.filter(item => item.category === 'fixa' && item.maturity_date)
     .map(item => item.maturity_date!.slice(0, 4)))].sort();
@@ -155,8 +156,10 @@ export default function InvestmentsScreen({ objective }: { objective?: Investmen
             <Text style={[styles.subtitle, styles.listTitle]}>Investimentos do objetivo</Text>
             <Action inline label={activeFilters ? `Filtros (${activeFilters})` : 'Filtros'} onPress={() => setFiltersOpen(true)} />
           </View>
-          {activeFilters > 0 && <Action label="Limpar filtros" onPress={() => setFilters({ ...EMPTY_INVESTMENT_FILTERS })} />}
-          {activeFilters > 0 && <Text style={styles.secondary}>Exibindo {filteredItems.length} de {items.length} investimento(s). O resumo mostra o total do objetivo.</Text>}
+          <TextInput accessibilityLabel="Buscar investimento pelo nome" style={styles.searchInput} value={nameQuery} onChangeText={setNameQuery}
+            placeholder="Buscar investimento pelo nome" placeholderTextColor={Colors.textMuted} autoCorrect={false} />
+          {(activeFilters > 0 || nameQuery.trim() !== '') && <Action label="Limpar filtros" onPress={() => { setFilters({ ...EMPTY_INVESTMENT_FILTERS }); setNameQuery(''); }} />}
+          {(activeFilters > 0 || nameQuery.trim() !== '') && <Text style={styles.secondary}>Exibindo {filteredItems.length} de {items.length} investimento(s). O resumo mostra o total do objetivo.</Text>}
         </>}
         {objective && !loading && items.length === 0 && <Text style={styles.secondary}>Você ainda não cadastrou investimentos neste objetivo.</Text>}
         {objective && !loading && items.length > 0 && filteredItems.length === 0 && <Text style={styles.secondary}>Nenhum investimento corresponde aos filtros selecionados.</Text>}
@@ -206,6 +209,7 @@ const styles = StyleSheet.create({
   value: { color: Colors.text, fontSize: 16, fontWeight: '700', flexShrink: 1 },
   row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: Spacing.sm, paddingVertical: Spacing.sm },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.md },
+  searchInput: { backgroundColor: Colors.surfaceAlt, borderRadius: Radius.md, padding: Spacing.md, color: Colors.text, fontSize: 16 },
   listHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md, marginTop: Spacing.md },
   listTitle: { flex: 1 },
   inlineButton: { marginTop: 0, flexShrink: 0 },

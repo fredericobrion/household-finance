@@ -84,3 +84,27 @@ test('filtros ocultos não restringem a listagem', () => {
   assert.deepEqual(ids(filterInvestments(positions, { ...noFilters, type: 'CDB', maturityYear: '2028' })), ['cdb', 'reserve', 'lci', 'stock', 'fii']);
   assert.deepEqual(ids(filterInvestments(positions, { ...noFilters, category: 'variavel', maturityYear: '2028' })), ['stock', 'fii']);
 });
+
+test('busca por nome ignora acentos, caixa e espaços nas extremidades', () => {
+  const named = positions.map((item, index) => ({ ...item, name: ['CDB Reserva', 'Emergência', 'LCI Casa', 'PETR4', 'FII Shopping'][index] }));
+  assert.deepEqual(ids(filterInvestments(named, noFilters, '  emergencia ')), ['reserve']);
+  assert.deepEqual(ids(filterInvestments(named, { ...noFilters, category: 'variavel' }, 'petr')), ['stock']);
+  assert.deepEqual(ids(filterInvestments(named, { ...noFilters, institutionId: 'bank-b' }, 'reserva')), []);
+  assert.equal(filterInvestments(named, noFilters, '   ').length, 5);
+});
+
+const { contributionFromUnitPrice } = context.exports;
+test('modo preço médio gera o mesmo total persistido e custo médio', () => {
+  const total = contributionFromUnitPrice(25, 100);
+  assert.equal(total, 2500);
+  const result = investmentTotals([buy(2000, 100), buy(total, 100)], 4500);
+  assert.equal(result.invested, 4500);
+  assert.equal(result.average, 22.5);
+});
+test('preço por unidade aceita quantidades fracionárias e arredonda total para centavos', () => {
+  assert.equal(contributionFromUnitPrice(10.25, 2.5), 25.63);
+  assert.equal(contributionFromUnitPrice(0.29, 3), 0.87);
+  for (const [price, quantity] of [[0, 10], [10, 0], [-10, 2], [10, NaN], [Infinity, 1]]) {
+    assert.equal(Number.isNaN(contributionFromUnitPrice(price, quantity)), true);
+  }
+});
