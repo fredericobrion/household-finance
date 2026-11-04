@@ -5,6 +5,49 @@ atualizado: 2026-11-04
 
 # Histórico de mudanças
 
+## 2026-11-04 — Patches de segurança das bibliotecas
+
+- Atualizadas dependências permitidas pelo projeto e alinhados módulos ao Expo 56.0.24, sem migração major ou overrides forçados.
+- Audit npm passou de 32 para 18 pacotes afetados; alerta crítico eliminado. Permanecem 6 altos, 10 moderados e 2 baixos, incluindo propagação transitiva.
+- TypeScript, testes de investimentos/acesso, árvore npm, verificação online de compatibilidade Expo e build Android release passaram. APK instalado por USB no Galaxy A54 preservando dados; abertura de Minha conta e mesma sessão permanente verificadas.
+- Detalhes e pendências em [[06-Desenvolvimento/Atualizacao-de-bibliotecas-2026-11-04]].
+
+## 2026-11-04 — Retirada de acessos anteriores
+
+- Usuário confirmou uso exclusivo no celular atual. Preparado script administrativo para retirar quatro vínculos anteriores preservando a identidade validada, usuários Auth e dados financeiros.
+- PostgreSQL isolado validou proteções de contagem e preservação do proprietário/outras casas. Aplicado pelo usuário em produção: quatro vínculos removidos e funcionamento do app confirmado. Usuários Auth preservados. Procedimento em [[05-Operacao/Restringir-acesso-a-casa]].
+
+## 2026-11-04 — Definição de senha e entrada
+
+- Minha conta permite definir senha com confirmação; após salvar, valida login, UUID e casa com cliente efêmero sem substituir a sessão principal.
+- Sem sessão salva, app oferece email/senha em vez de criar usuário anônimo. Erros e estado de carregamento tratados; sessão existente preservada.
+- TypeScript, testes de validação/identidade/erros e build release passaram. Atualização instalada no Galaxy A54 (SM-A546E), pacote `com.fredericobrion.financeapp`, preservando dados. Interface confirmou Minha conta, mesma identidade permanente e formulário Definir senha. Usuário definiu a senha no aparelho e confirmou a mensagem de sucesso: login com email/senha, mesma identidade e acesso à casa validados pelo cliente efêmero. Revisão dos demais membros ainda pendente. Sem dependências ou migrações novas.
+- Reset de senha esquecida e revisão de membros anteriores continuam pendentes. Fluxo em [[03-Fluxos/Minha-conta]].
+
+## 2026-11-04 — Solicitação de vínculo de email
+
+- Minha conta permite solicitar email de confirmação preservando o UUID da sessão anônima e consultar confirmação no servidor. Conflitos não trocam nem mesclam contas.
+- Sem alteração de banco, dependências ou inclusão de email real no código/documentação. TypeScript e build release passaram; atualização instalada no Galaxy A54 preservando dados. Vínculo solicitado pelo app com o email autorizado. Interface passou a exibir Permanente, com o mesmo identificador.
+- Usuário confirmou pelo SQL Editor o email correto, `is_anonymous=false` e `email_confirmed_at` preenchido, sem receber link. Configuração de confirmação automática não inspecionada. Login recuperável ainda pendente. Detalhes em [[03-Fluxos/Minha-conta]].
+
+## 2026-11-04 — Identificação da sessão no celular
+
+- Adicionada tela Minha conta ao menu lateral, com identificador selecionável e tipo da conta. Não exibe tokens e preserva a sessão existente.
+- Sem alteração de dependências ou banco; fluxo em [[03-Fluxos/Minha-conta]].
+- TypeScript e build release passaram. Atualização instalada por USB no Galaxy A54 (SM-A546E), pacote `com.fredericobrion.financeapp`, preservando dados. Tela Minha conta aberta; usuário confirmou conta anônima e identificador correspondente à lista administrativa, sem registrar o identificador real no vault.
+
+## 2026-11-04 — Contenção de associação automática à casa
+
+- Preparada migração 0011: novo cadastro não recebe casa/profile; clientes não podem criar/excluir perfis ou alterar campos de autorização. Membros existentes preservados, sujeitos a revisão.
+- Testes PostgreSQL isolados passaram para acesso existente, rejeição de não membros, privilégios por coluna e reaplicação.
+- **Aplicada pelo usuário no Supabase**, com confirmação de que o app continua funcionando. Conferência dos privilégios em produção e revisão dos membros ainda pendentes; sem alteração do APK ou implementação de recuperação. Procedimento em [[05-Operacao/Restringir-acesso-a-casa]].
+
+## 2026-11-04 — Auditoria de segurança
+
+- Revisadas dependências npm, autorização nas migrações, armazenamento de sessão e APK release local.
+- Registrados 32 pacotes afetados por avisos conhecidos e falhas de associação/autorização de usuários no código do Supabase; produção não foi validada.
+- Documentadas prioridades, evidências e limites em [[06-Desenvolvimento/Auditoria-de-seguranca-2026-11-04]]. Sem alteração funcional, de banco ou instalação.
+
 ## 2026-11-04 — Busca por nome e aporte por preço médio
 
 - Adicionada busca por nome abaixo do cabeçalho da listagem, combinada com os filtros existentes.

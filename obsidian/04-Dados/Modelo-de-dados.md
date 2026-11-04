@@ -8,7 +8,7 @@ atualizado: 2026-11-04
 
 ## Configuração e autenticação
 
-`src/lib/supabase.ts` cria o cliente com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`. A sessão do Supabase fica em `AsyncStorage` e o app autentica anonimamente se não encontrar uma sessão.
+`src/lib/supabase.ts` cria o cliente com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`. A sessão do Supabase fica em `AsyncStorage`. Sessões existentes são preservadas; sem sessão, o app oferece entrada por email/senha e não cria usuários anônimos. Minha conta permite definir senha após email confirmado, mantendo UUID e profile. Um cliente efêmero testa login e vínculo de casa sem persistir outra sessão. Não há nova migração para esse fluxo; reset de senha esquecida ainda não foi implementado.
 
 ## Tabelas
 
@@ -31,7 +31,8 @@ atualizado: 2026-11-04
 
 - Todas as tabelas de domínio usam `household_id` e RLS.
 - `auth_household_id()` determina a casa do usuário autenticado; as policies permitem CRUD somente nessa casa.
-- O gatilho `handle_new_user()` cria um profile e, caso ainda não exista, a casa inicial e as sete metas padrão; Apartamento é criada com 0%.
+- A migração 0001 associava novos usuários à primeira casa. A 0011, aplicada pelo usuário com funcionamento do app confirmado em 2026-11-04, substitui `handle_new_user()` por uma função sem associação automática. Novos usuários ficam sem profile/casa; membros anteriores são preservados e precisam de revisão.
+- Após 0011, clientes podem alterar somente `display_name` no próprio profile; criação, exclusão e alteração de `id`/`household_id` exigem provisionamento administrativo. A migração revoga privilégios tanto de tabela quanto de coluna. Procedimento: [[05-Operacao/Restringir-acesso-a-casa]].
 - `persons` → `fun_entries` usa exclusão em cascata.
 - Valores não aceitam números negativos; em `fun_entries` o sinal deriva de `type`.
 
@@ -67,3 +68,5 @@ Totais aportados, quantidade, preço por unidade, preço médio e valorização 
 | `0010_investment_maturity.sql` | Vencimento opcional só para renda fixa e sobrecarga de criação compatível com versões anteriores. Validada em PostgreSQL isolado e aplicada pelo usuário; coluna e leitura pelo app confirmadas. |
 
 Ao mudar o banco, crie uma nova migração sequencial em `supabase/migrations/`, aplique-a no Supabase e atualize esta nota.
+
+`0011_restrict_household_membership.sql`: contenção de acesso automático à casa e proteção de campos de autorização. Validada em PostgreSQL isolado; **aplicada pelo usuário em 2026-11-04, com funcionamento do app confirmado**; revisão dos membros e conferência dos privilégios reais ainda pendentes. Não altera o armazenamento de sessão nem implementa login recuperável.
