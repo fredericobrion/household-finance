@@ -28,34 +28,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    (async () => {
-      setLoading(true);
-      setError(null);
-
-      // já existe sessão salva? usa ela.
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        if (active) {
-          setSession(data.session);
-          setLoading(false);
-        }
-        return;
-      }
-
-      // sem sessão → entra de forma anônima (sem conta, sem senha)
-      const { data: anon, error: anonError } = await supabase.auth.signInAnonymously();
-      if (!active) return;
-      if (anonError) {
-        setError(anonError.message);
-      } else {
-        setSession(anon.session ?? null);
-      }
-      setLoading(false);
-    })();
-
+    let authChanged = false;
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
+      authChanged = true;
+      if (active) {
+        setSession(s);
+        setLoading(false);
+        setError(null);
+      }
     });
+
+    setLoading(true);
+    setError(null);
+    (async () => {
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (active && !authChanged) setSession(data.session);
+      } catch {
+        if (active && !authChanged) {
+          setError('Não foi possível recuperar a sessão salva. Verifique sua conexão.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
 
     return () => {
       active = false;

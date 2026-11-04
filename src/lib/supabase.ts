@@ -19,3 +19,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 })
+
+// Cliente efêmero: testa credenciais sem substituir a sessão do aparelho.
+export function createVerificationClient() {
+  return createClient(supabaseUrl!, supabaseAnonKey!, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  })
+}

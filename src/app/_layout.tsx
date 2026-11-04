@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/data/AuthProvider';
-import { Colors, Radius, Spacing } from '@/theme/colors';
+import { SignInScreen } from '@/components/SignInScreen';
+import { Colors } from '@/theme/colors';
 
 function Gate() {
   const { session, loading, error, retry } = useAuth();
@@ -20,17 +21,7 @@ function Gate() {
   }
 
   if (!session) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorTitle}>Não foi possível conectar</Text>
-        <Text style={styles.errorMsg}>
-          {error ?? 'Verifique sua internet e tente novamente.'}
-        </Text>
-        <TouchableOpacity style={styles.retry} onPress={retry}>
-          <Text style={styles.retryText}>Tentar de novo</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <SignInScreen initialError={error} retry={retry} />;
   }
 
   return (
@@ -44,6 +35,16 @@ function Gate() {
         drawerInactiveTintColor: Colors.textSecondary,
         drawerActiveBackgroundColor: Colors.surfaceAlt,
       }}>
+      <Drawer.Screen
+        name="minha-conta"
+        options={{
+          title: 'Minha conta',
+          drawerLabel: 'Minha conta',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" color={color} size={size} />
+          ),
+        }}
+      />
       <Drawer.Screen
         name="(tabs)"
         options={{
@@ -97,28 +98,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.background,
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
-  errorTitle: {
-    color: Colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  errorMsg: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  retry: {
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  retryText: {
-    color: '#000',
-    fontWeight: '700',
   },
 });
