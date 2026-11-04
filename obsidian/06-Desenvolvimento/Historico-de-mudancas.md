@@ -5,6 +5,12 @@ atualizado: 2026-11-04
 
 # Histórico de mudanças
 
+## 2026-11-04 — Publicação da branch de investimentos
+
+- Criada `codex/investimentos-por-objetivo` a partir da main remota atualizada e registrado o commit da funcionalidade.
+- Corrigido o remoto local deste checkout de HTTPS para o alias SSH pessoal, sem alterar a configuração de trabalho.
+- Autenticação pessoal e push confirmados. Orientações em [[05-Operacao/Como-rodar]].
+
 ## 2026-11-04 — Alinhamento do botão de filtros
 
 - Título da listagem à esquerda e botão Filtros à direita, com centros alinhados verticalmente.

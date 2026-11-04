@@ -48,6 +48,14 @@ adb install -r android/app/build/outputs/apk/release/app-release.apk
 
 Confirmar exatamente um aparelho autorizado em `adb devices -l` antes de instalar. `install -r` atualiza preservando dados; nunca desinstalar automaticamente se houver conflito de assinatura. O package é `com.fredericobrion.financeapp`. Verificar abertura após a instalação e registrar o resultado no histórico. Novos builds/instalações são feitos somente quando o usuário pedir explicitamente.
 
+## GitHub com contas pessoal e de trabalho
+
+Neste computador, `~/.ssh/config` separa as identidades pelos aliases `github.com-personal` e `github.com-work`. Este checkout usa o alias pessoal no `origin`: `git@github.com-personal:fredericobrion/household-finance.git`. O ajuste é local ao repositório e não altera os remotos de projetos de trabalho.
+
+Um remoto HTTPS não utiliza esses aliases SSH e pode pedir usuário/credencial mesmo com uma chave SSH pessoal funcionando em outros projetos. Conferir `git remote -v` antes de diagnosticar a conta. `ssh -T git@github.com-personal` confirmou a identidade pessoal e o push da branch de investimentos foi concluído. Outros computadores devem usar o alias/chave adequado à sua própria configuração, sem copiar chaves para o projeto.
+
+Publicar via Git/SSH e abrir uma PR são operações distintas: a criação de PR exige sessão web ou integração/API autenticada no GitHub.
+
 ## Compatibilidade observada
 
 O `package.json` está alinhado ao Expo SDK 56 (`expo ~56.0.12`, React Native `0.85.3`, React `19.2.3`). A [referência do Expo SDK 56](https://docs.expo.dev/versions/v56.0.0/) informa Node mínimo 20.19.x.
