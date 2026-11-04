@@ -33,6 +33,8 @@ Na página de cada objetivo, o título **Investimentos do objetivo** fica à esq
 - Tipo: aparece somente com uma categoria selecionada e oferece os tipos correspondentes.
 - Ano de vencimento: aparece somente para renda fixa; oferece Todos, Sem vencimento e os anos presentes nas posições daquele objetivo, em ordem crescente.
 
+Abaixo do cabeçalho e antes do primeiro investimento há o campo **Buscar investimento pelo nome**, aplicado imediatamente, por trecho do nome, ignorando caixa, acentos e espaços nas extremidades. A busca é combinada com os filtros do modal; Limpar filtros na página também apaga a busca.
+
 Os critérios são combinados. Trocar categoria limpa tipo e ano, preservando a instituição. Aplicar atualiza a listagem; Cancelar ou voltar do modal descarta edições não aplicadas. Limpar filtros no modal prepara a seleção vazia, aplicada ao confirmar; Limpar filtros na página remove todos imediatamente.
 
 A página mostra quantos filtros estão ativos e quantos investimentos correspondem. Quando não há resultados, informa que nenhum investimento corresponde aos critérios, mantendo a possibilidade de limpar os filtros. **O resumo do objetivo e o resumo geral não são filtrados.** A seleção fica no estado local da página, sem persistência no banco.
@@ -40,6 +42,10 @@ A página mostra quantos filtros estão ativos e quantos investimentos correspon
 ## Aportes e detalhes
 
 Abrir um investimento mostra seu resumo e o histórico por data decrescente. Os botões Adicionar aporte, Atualizar valor atual, Editar vencimento (renda fixa) e Excluir investimento ocupam toda a largura, em coluna, com altura mínima de 52 e espaçamento uniforme. A área reservada à borda é igual em todos, incluindo a ação de exclusão. **Adicionar aporte** solicita valor positivo e data até hoje; renda variável exige quantidade. O preço por unidade é calculado como valor/quantidade e não é salvo.
+
+Para aportes de renda variável, o seletor **Valor total / Preço médio** começa em Valor total. No segundo modo, a pessoa informa preço médio por unidade da compra (em reais, com centavos) e quantidade. O app calcula e exibe `total = preço × quantidade`, arredondado para centavos. Quantidade e data seguem as regras anteriores; o total deve ser positivo. O seletor também está disponível ao editar aportes de renda variável, iniciando pelo total já salvo. Os campos dos dois modos permanecem independentes ao alternar, evitando reinterpretar um total como preço unitário.
+
+Somente o total calculado, quantidade e data são enviados ao repositório, como antes. O preço informado não substitui o preço médio acumulado da carteira, que continua derivado do histórico. Cadastro inicial, renda fixa e avaliação manual mantêm o modo de valor total.
 
 Os aportes podem ser editados ou excluídos (exclusão pede confirmação). Corrigir data não altera os valores. Corrigir valor ajusta o valor atual pela diferença; corrigir quantidade recalcula quantidade e preço médio. Excluir subtrai o valor do aporte do valor atual, limitado a zero.
 

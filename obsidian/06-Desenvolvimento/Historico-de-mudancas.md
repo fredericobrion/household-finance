@@ -5,6 +5,13 @@ atualizado: 2026-11-04
 
 # Histórico de mudanças
 
+## 2026-11-04 — Busca por nome e aporte por preço médio
+
+- Adicionada busca por nome abaixo do cabeçalho da listagem, combinada com os filtros existentes.
+- Incluído seletor Valor total/Preço médio nos aportes de renda variável; preço por unidade e quantidade geram o mesmo total persistido de antes.
+- Sem mudança de banco; TypeScript e 13 testes de domínio aprovados. Após solicitação explícita, build release instalado no Galaxy A54 com dados preservados; abertura e busca visível confirmadas.
+- Detalhes: [[03-Fluxos/Investimentos]] e [[06-Desenvolvimento/Investimentos]].
+
 ## 2026-11-04 — Publicação da branch de investimentos
 
 - Criada `codex/investimentos-por-objetivo` a partir da main remota atualizada e registrado o commit da funcionalidade.

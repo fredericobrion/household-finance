@@ -87,3 +87,23 @@ Padronizados Adicionar aporte, Atualizar valor atual, Editar vencimento e Exclui
 ## Versão com vencimentos, filtros e botões — 2026-11-04
 
 Após pedido explícito do usuário, gerado e instalado APK release no Galaxy A54 com os ajustes acumulados. Migração 0010 aplicada pelo usuário e confirmada antes da instalação. Tipos, dez testes de domínio e build aprovados; abertura da página do objetivo e painel de filtros verificadas no aparelho. Dados preservados. Para detalhes, veja [[06-Desenvolvimento/Investimentos-filtros-e-vencimento]].
+
+## Busca por nome e modos de aporte — 2026-11-04
+
+### Contexto e mudança
+
+Localizar posições pelo nome e registrar compras de renda variável pelo preço médio unitário e quantidade, além do modo anterior por valor total.
+
+### Implementação
+
+`InvestmentsScreen` inclui busca textual entre o cabeçalho e a lista, combinada aos filtros. `filterInvestments` aceita busca opcional e normaliza caixa/acentos/espaços; os resumos permanecem completos. Limpar filtros apaga também a busca.
+
+`InvestmentFormModal` inclui seletor exclusivo para inclusão/edição de aporte variável. O modo inicial é total; no modo Preço médio, `contributionFromUnitPrice` multiplica preço em centavos pela quantidade e arredonda o total para centavos. Os valores dos dois modos são independentes ao alternar. Preço/quantidade inválidos ou total zero bloqueiam o envio. O repositório e o banco recebem os mesmos campos anteriores; não há migração ou dependência nova.
+
+### Verificação
+
+TypeScript e 13 testes de domínio aprovados, incluindo busca combinada, acentos, custo médio após aporte por preço, quantidades fracionárias, centavos e entradas inválidas. `git diff --check` aprovado. Nenhum APK gerado ou instalado; validação manual no aparelho fica para a próxima versão solicitada pelo usuário.
+
+### Instalação dos modos de aporte e busca — 2026-11-04
+
+Após pedido explícito, APK release gerado e instalado com `adb install -r` no Galaxy A54 (SM-A546E), package `com.fredericobrion.financeapp`, versão 1.0.0, preservando os dados. TypeScript, 13 testes de domínio e build aprovados. Abertura da página do objetivo e campo Buscar investimento pelo nome confirmados no aparelho, sem erro de carregamento e sem gravar dados de teste. A validação manual do novo modo de aporte fica disponível ao usuário. Versão de produção funciona sem cabo/Metro, com internet para o Supabase. Alterações paralelas de segurança presentes no checkout não foram modificadas ou aplicadas por esta instalação.

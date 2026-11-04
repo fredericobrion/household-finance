@@ -18,8 +18,10 @@ export function changeFilterCategory(filters: InvestmentFilters, category: Inves
 }
 
 /** Filtros combinados; campos dependentes só são usados na categoria correspondente. */
-export function filterInvestments(items: Investment[], filters: InvestmentFilters): Investment[] {
+export function filterInvestments(items: Investment[], filters: InvestmentFilters, nameQuery = ''): Investment[] {
+  const normalizedQuery = normalizeInvestmentName(nameQuery);
   return items.filter(item => {
+    if (normalizedQuery && !normalizeInvestmentName(item.name).includes(normalizedQuery)) return false;
     if (filters.category && item.category !== filters.category) return false;
     if (filters.institutionId && item.institution_id !== filters.institutionId) return false;
     if (filters.category && filters.type && item.investment_type !== filters.type) return false;
@@ -29,4 +31,14 @@ export function filterInvestments(items: Investment[], filters: InvestmentFilter
     }
     return true;
   });
+}
+
+function normalizeInvestmentName(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+/** Preço em reais com centavos; total também arredondado para centavos. */
+export function contributionFromUnitPrice(unitPrice: number, quantity: number): number {
+  if (!Number.isFinite(unitPrice) || !Number.isFinite(quantity) || unitPrice <= 0 || quantity <= 0) return NaN;
+  return Math.round(Math.round(unitPrice * 100) * quantity) / 100;
 }
