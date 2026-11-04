@@ -66,7 +66,7 @@ O resolvedor do npm sugere Expo 58/Router 58 para parte das pendências. Isso n�
 
 - TypeScript e suítes de investimentos e acesso à conta passaram após alinhamento.
 - `expo install --check` online confirmou versões alinhadas.
-- Build Android release passou (`assembleRelease`, 7m48s). APK gerado localmente; **não instalado no celular nesta etapa**.
+- Build Android release passou (`assembleRelease`, 7m48s). APK instalado por USB no Galaxy A54 (SM-A546E), pacote `com.fredericobrion.financeapp`, preservando dados. Abertura de Minha conta, mesma identidade e sessão permanente verificadas após atualização.
 - Árvore `npm ls --all` sem conflitos ou dependências inválidas.
 - APK SHA-256: `9d9bbe2ff4c3d53218a894dcc39a08bd220a7988650b3cb7aadfb81112ad044c`.
 - Mudanças estão em `package.json` e `package-lock.json`; sem alteração de schema, política de acesso ou credenciais.

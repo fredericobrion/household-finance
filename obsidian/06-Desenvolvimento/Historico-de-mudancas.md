@@ -9,7 +9,7 @@ atualizado: 2026-11-04
 
 - Atualizadas dependências permitidas pelo projeto e alinhados módulos ao Expo 56.0.24, sem migração major ou overrides forçados.
 - Audit npm passou de 32 para 18 pacotes afetados; alerta crítico eliminado. Permanecem 6 altos, 10 moderados e 2 baixos, incluindo propagação transitiva.
-- TypeScript, testes de investimentos/acesso, árvore npm, verificação online de compatibilidade Expo e build Android release passaram. APK gerado; não instalado no celular nesta etapa.
+- TypeScript, testes de investimentos/acesso, árvore npm, verificação online de compatibilidade Expo e build Android release passaram. APK instalado por USB no Galaxy A54 preservando dados; abertura de Minha conta e mesma sessão permanente verificadas.
 - Detalhes e pendências em [[06-Desenvolvimento/Atualizacao-de-bibliotecas-2026-11-04]].
 
 ## 2026-11-04 — Retirada de acessos anteriores
