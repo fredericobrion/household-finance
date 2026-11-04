@@ -1,7 +1,7 @@
 ---
 tipo: dados
 fonte: Supabase
-atualizado: 2026-09-02
+atualizado: 2026-11-04
 ---
 
 # Modelo de dados e Supabase
@@ -23,6 +23,9 @@ atualizado: 2026-09-02
 | `recurring_expenses` | Modelos de gastos recorrentes. |
 | `persons` | Pessoas das carteiras pessoais. |
 | `fun_entries` | Créditos e débitos das carteiras pessoais. |
+| `investment_institutions` | Catálogo global de instituições, somente leitura para clientes autenticados. |
+| `investments` | Posições por casa e objetivo, categoria/tipo, instituição, valor atual e data da avaliação manual. |
+| `investment_contributions` | Histórico de aportes com valor, data e quantidade para renda variável. |
 
 ## Integridade e acesso
 
@@ -31,6 +34,22 @@ atualizado: 2026-09-02
 - O gatilho `handle_new_user()` cria um profile e, caso ainda não exista, a casa inicial e as sete metas padrão; Apartamento é criada com 0%.
 - `persons` → `fun_entries` usa exclusão em cascata.
 - Valores não aceitam números negativos; em `fun_entries` o sinal deriva de `type`.
+
+## Investimentos
+
+`investments` usa os objetivos `liberdade_financeira`, `apartamento` e `metas`, com categoria `fixa`/`variavel` e tipos validados no banco. O nome é obrigatório. `current_value` é `numeric(14,2)` não negativo; `valued_at` é nulo até a primeira avaliação manual. `maturity_date date` é opcional e só pode ser preenchido para renda fixa; posições existentes ficam com nulo e o banco rejeita datas infinitas. A instituição é FK para o catálogo global.
+
+`investment_contributions` guarda `amount numeric(14,2)` positivo, `quantity numeric(22,8)` positiva (obrigatória apenas para variável), `occurred_on date` até hoje e `created_at`. A FK composta `(investment_id, household_id)` garante que aporte e posição pertençam à mesma casa; exclusão da posição remove seus aportes. RLS limita posições e aportes à casa autenticada.
+
+O gatilho `adjust_investment_contribution()` bloqueia a posição com `FOR UPDATE`, valida a quantidade e ajusta `current_value` na mesma transação pelo valor inserido, diferença editada ou valor removido, limitado a zero. A data da avaliação manual é preservada. Não permite transferir um aporte para outra posição/casa.
+
+`create_investment(...)` executa com as permissões do chamador e cria posição e aporte inicial atomicamente. Valor inicial zero não gera aporte; falhas no aporte desfazem a posição. Execução concedida somente a `authenticated`.
+
+A migração 0010 adiciona uma sobrecarga de `create_investment` com o parâmetro `p_maturity_date date` (sem default). Ela chama a assinatura anterior e atualiza o vencimento dentro da mesma transação: uma data incompatível desfaz posição e aporte. A assinatura de nove parâmetros permanece para compatibilidade com o APK instalado. Ambas usam as permissões do chamador; não ampliam a RLS. Vencimento pode ser atualizado diretamente somente na própria casa.
+
+Filtros de categoria/instituição/tipo/ano são aplicados localmente à listagem e não geram novas tabelas ou índices.
+
+Totais aportados, quantidade, preço por unidade, preço médio e valorização são derivados no aplicativo, sem colunas duplicadas. Não há tabela de objetivos: os três identificadores são fixos no domínio e validados por `CHECK` no banco.
 
 ## Migrações versionadas
 
@@ -44,5 +63,7 @@ atualizado: 2026-09-02
 | `0006_work_expenses.sql` | Gastos com trabalho mensais, índice e política RLS. |
 | `0007_add_apartment_category.sql` | Adiciona `apartamento` ao enum de categorias. |
 | `0008_seed_apartment_goal.sql` | Cria a meta Apartamento com 0% nas casas existentes. |
+| `0009_investments.sql` | Investimentos, instituições, aportes, função transacional, gatilho de saldo e RLS. Validada em PostgreSQL isolado e aplicada pelo usuário; leitura confirmada no aparelho. |
+| `0010_investment_maturity.sql` | Vencimento opcional só para renda fixa e sobrecarga de criação compatível com versões anteriores. Validada em PostgreSQL isolado e aplicada pelo usuário; coluna e leitura pelo app confirmadas. |
 
 Ao mudar o banco, crie uma nova migração sequencial em `supabase/migrations/`, aplique-a no Supabase e atualize esta nota.

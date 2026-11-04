@@ -1,12 +1,12 @@
 ---
 tipo: produto
 status: ativo
-atualizado: 2026-09-02
+atualizado: 2026-11-04
 ---
 
 # Visão geral
 
-**Orçamento** é um app mobile para acompanhar o orçamento mensal de uma casa e, separadamente, carteiras de gastos pessoais por pessoa.
+**Orçamento** é um app mobile para acompanhar o orçamento mensal de uma casa e, separadamente, carteiras de gastos pessoais por pessoa e investimentos por objetivo.
 
 ## Funcionalidades
 
@@ -18,6 +18,7 @@ atualizado: 2026-09-02
 | Recorrentes | Manter modelos de gastos repetidos e incluí-los manualmente no mês desejado. |
 | Parcelas | Dividir uma compra em parcelas mensais; excluir uma parcela exclui o grupo inteiro. |
 | Gastos pessoais | Criar pessoas e controlar saldo, gastos e saldo acumulado de cada carteira. |
+| Investimentos | Separar carteira por objetivo, registrar aportes e quantidades, calcular preço médio, avaliar o valor atual manualmente, informar vencimento opcional da renda fixa e filtrar a listagem. Veja [[03-Fluxos/Investimentos]]. |
 
 ## Categorias de orçamento
 

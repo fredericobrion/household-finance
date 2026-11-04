@@ -55,6 +55,16 @@ function Gate() {
         }}
       />
       <Drawer.Screen
+        name="investimentos"
+        options={{
+          title: 'Investimentos',
+          drawerLabel: 'Investimentos',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="trending-up-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="besteira"
         options={{
           title: 'Gastos Pessoais',

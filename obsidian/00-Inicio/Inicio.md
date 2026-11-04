@@ -1,7 +1,7 @@
 ---
 tipo: indice
 projeto: Finance App
-atualizado: 2026-07-30
+atualizado: 2026-11-04
 ---
 
 # Finance App
@@ -14,6 +14,7 @@ Vault de contexto vivo do aplicativo **Orçamento**. Use esta nota como ponto de
 - [[02-Arquitetura/Arquitetura|Arquitetura]] — camadas, rotas, providers e dependências.
 - [[03-Fluxos/Orcamento|Fluxo: Orçamento]]
 - [[03-Fluxos/Gastos-pessoais|Fluxo: Gastos pessoais]]
+- [[03-Fluxos/Investimentos|Fluxo: Investimentos]]
 - [[04-Dados/Modelo-de-dados|Modelo de dados]] — Supabase, RLS e migrações.
 - [[05-Operacao/Como-rodar|Como rodar]] — pré-requisitos, variáveis e comandos.
 - [[06-Desenvolvimento/Convencoes-e-manutencao|Convenções e manutenção]]
@@ -24,7 +25,7 @@ Vault de contexto vivo do aplicativo **Orçamento**. Use esta nota como ponto de
 - Plataforma: Expo SDK 56 / React Native / TypeScript.
 - Persistência em uso: Supabase; os repositórios locais existem como alternativa, mas não estão ativos.
 - Acesso: login anônimo do Supabase, com sessão persistida no dispositivo.
-- Navegação: drawer principal, abas de Orçamento e tela de Gastos pessoais.
+- Navegação: drawer principal, abas de Orçamento e telas de Gastos pessoais e Investimentos.
 
 ## Regra do vault
 
