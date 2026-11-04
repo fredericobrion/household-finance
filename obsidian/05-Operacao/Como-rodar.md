@@ -1,6 +1,6 @@
 ---
 tipo: operacao
-atualizado: 2026-07-30
+atualizado: 2026-11-04
 ---
 
 # Como rodar
@@ -34,6 +34,19 @@ npm run lint       # lint do Expo
 ```
 
 No `expo start`, escolha Expo Go, emulador ou development build conforme o ambiente. Sem as variáveis do Supabase ou sem conectividade, a tela inicial exibirá falha de conexão e opção para tentar novamente.
+
+## Android de produção, sem cabo ou Metro
+
+A versão release inclui `assets/index.android.bundle` no APK e roda sem computador ou cabo após a instalação. O cabo é usado para instalar/atualizar por USB; a conexão com a internet continua necessária para autenticação e dados do Supabase. As migrações exigidas pelo novo código devem ser aplicadas antes de instalar a atualização.
+
+Na raiz do projeto:
+
+```sh
+(cd android && NODE_ENV=production ./gradlew :app:assembleRelease --no-daemon --console=plain)
+adb install -r android/app/build/outputs/apk/release/app-release.apk
+```
+
+Confirmar exatamente um aparelho autorizado em `adb devices -l` antes de instalar. `install -r` atualiza preservando dados; nunca desinstalar automaticamente se houver conflito de assinatura. O package é `com.fredericobrion.financeapp`. Verificar abertura após a instalação e registrar o resultado no histórico. Novos builds/instalações são feitos somente quando o usuário pedir explicitamente.
 
 ## Compatibilidade observada
 

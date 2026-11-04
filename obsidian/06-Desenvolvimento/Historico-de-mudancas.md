@@ -1,9 +1,54 @@
 ---
 tipo: historico
-atualizado: 2026-09-02
+atualizado: 2026-11-04
 ---
 
 # Histórico de mudanças
+
+## 2026-11-04 — Alinhamento do botão de filtros
+
+- Título da listagem à esquerda e botão Filtros à direita, com centros alinhados verticalmente.
+- Limpar filtros aparece abaixo, preservando o alinhamento do cabeçalho.
+- TypeScript verificado; após pedido explícito, última versão release do dia instalada no Galaxy A54 com abertura e alinhamento confirmados. Detalhes: [[06-Desenvolvimento/Investimentos-filtros-e-vencimento]].
+
+## 2026-11-04 — Botões dos detalhes de investimentos
+
+- Padronizados largura, altura mínima e espaçamento das ações do investimento, incluindo edição de vencimento.
+- Verificação TypeScript; sem build ou instalação no celular.
+- Detalhes: [[06-Desenvolvimento/Investimentos]].
+
+## 2026-11-04 — Vencimento opcional e filtros de investimentos
+
+- Adicionado vencimento opcional à renda fixa, com edição/remoção em posições existentes.
+- Incluídos filtros combinados por categoria, instituição, tipo dependente da categoria e ano de vencimento exclusivo da renda fixa, incluindo Sem vencimento.
+- Criada migração 0010, aplicada pelo usuário. Após pedido explícito, versão release instalada no Galaxy A54 com abertura e painel de filtros verificados.
+- Detalhes: [[06-Desenvolvimento/Investimentos-filtros-e-vencimento|registro]] e [[03-Fluxos/Investimentos|fluxo]].
+
+## 2026-11-04 — Exclusão de investimento e voltar do Android
+
+- Adicionada exclusão de investimento com confirmação, incluindo seus aportes em cascata.
+- Corrigido voltar do celular: detalhes → objetivo → visão geral, sem pular para Orçamento.
+- Sem nova migração. Detalhes: [[03-Fluxos/Investimentos]] e [[06-Desenvolvimento/Investimentos]].
+
+## 2026-11-04 — Seleção direta de instituição
+
+- Removido o campo de busca de instituição no cadastro de investimentos; somente a lista permanece.
+- Sem alteração de banco ou catálogo. Detalhes: [[03-Fluxos/Investimentos]].
+
+## 2026-11-04 — Resumo geral e páginas de objetivos
+
+- Resumo da página principal passou a consolidar os três objetivos.
+- Cada objetivo abre uma página própria com resumo, cadastro e listagem de seus investimentos.
+- Alteração de navegação e apresentação, sem migração de banco.
+- Detalhes: [[03-Fluxos/Investimentos|fluxo]] e [[06-Desenvolvimento/Investimentos|registro de mudança]].
+
+## 2026-11-04 — Investimentos por objetivo
+
+- Criada a área Investimentos para Liberdade financeira, Apartamento e Metas.
+- Adicionados cadastro com instituição e tipo, aportes datados, quantidades, preço médio e avaliação manual do valor atual.
+- Incluída migração `0009_investments.sql` com RLS e operações transacionais; aplicada pelo usuário com catálogo de instituições reduzido.
+- Instalada a versão de produção no Galaxy A54, preservando os dados; abertura e carga da área de investimentos verificadas.
+- Detalhes: [[03-Fluxos/Investimentos|fluxo]] e [[06-Desenvolvimento/Investimentos|registro de mudança]].
 
 ## 2026-09-02 — Ajustes no resumo e lançamentos
 
